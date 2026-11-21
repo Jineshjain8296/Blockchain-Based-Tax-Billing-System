@@ -1,0 +1,3263 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>GovTaxChain — National Blockchain Tax System</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=JetBrains+Mono:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --ink:#0b0e17;--surface:#111520;--card:#161c2e;--card2:#1c2438;
+  --border:#222b42;--border2:#2d3a58;
+  --gold:#f5a623;--gold2:#ffd166;
+  --cyan:#00d4ff;--teal:#00b894;
+  --red:#ff4757;--pink:#ff6b9d;
+  --purple:#a55eea;--blue:#4a90d9;
+  --white:#e8edf8;--muted:#7a8aaa;--dim:#3d4d6a;
+  --mono:'JetBrains Mono',monospace;
+  --display:'Syne',sans-serif;
+}
+html{scroll-behavior:smooth}
+body{font-family:var(--display);background:var(--ink);color:var(--white);min-height:100vh;overflow-x:hidden}
+
+/* GRID BG */
+body::before{
+  content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
+  background:
+    radial-gradient(ellipse 80% 50% at 20% -10%,rgba(0,212,255,.06),transparent),
+    radial-gradient(ellipse 60% 40% at 80% 110%,rgba(245,166,35,.05),transparent),
+    linear-gradient(var(--border) 1px,transparent 1px) 0 0 / 48px 48px,
+    linear-gradient(90deg,var(--border) 1px,transparent 1px) 0 0 / 48px 48px;
+  opacity:.7;
+}
+
+/* TOPBAR */
+.topbar{
+  position:sticky;top:0;z-index:200;height:60px;
+  background:rgba(11,14,23,.95);backdrop-filter:blur(16px);
+  border-bottom:1px solid var(--border2);
+  display:flex;align-items:center;justify-content:space-between;
+  padding:0 24px;
+}
+.logo{display:flex;align-items:center;gap:14px}
+.logo-badge{
+  width:38px;height:38px;border-radius:10px;
+  background:linear-gradient(135deg,var(--gold),var(--gold2));
+  display:flex;align-items:center;justify-content:center;
+  font-family:var(--mono);font-size:13px;font-weight:700;color:#000;
+  box-shadow:0 0 20px rgba(245,166,35,.3);
+}
+.logo-text{font-size:16px;font-weight:800;letter-spacing:1px}
+.logo-text em{color:var(--gold);font-style:normal}
+.logo-sub{font-family:var(--mono);font-size:9px;color:var(--muted);letter-spacing:2px;margin-top:1px}
+.topbar-right{display:flex;align-items:center;gap:20px}
+.tbar-stat{text-align:right}
+.tbar-val{font-family:var(--mono);font-size:13px;font-weight:600;color:var(--gold2)}
+.tbar-lbl{font-family:var(--mono);font-size:8px;color:var(--dim);letter-spacing:1.5px;text-transform:uppercase}
+.pulse{width:8px;height:8px;border-radius:50%;background:var(--teal);box-shadow:0 0 8px var(--teal);animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{transform:scale(1);opacity:1}50%{transform:scale(.8);opacity:.5}}
+.fy-badge{
+  font-family:var(--mono);font-size:10px;padding:4px 10px;
+  border-radius:4px;border:1px solid var(--gold);color:var(--gold);
+  background:rgba(245,166,35,.08);letter-spacing:1px;
+}
+
+/* LAYOUT */
+.shell{display:flex;height:calc(100vh - 60px);position:relative;z-index:1}
+.nav{
+  width:64px;flex-shrink:0;border-right:1px solid var(--border);
+  background:rgba(17,21,32,.9);display:flex;flex-direction:column;
+  align-items:center;padding:16px 0;gap:6px;
+}
+.nav-btn{
+  width:44px;height:44px;border-radius:10px;border:none;background:transparent;
+  cursor:pointer;display:flex;align-items:center;justify-content:center;
+  font-size:18px;transition:.2s;position:relative;
+}
+.nav-btn:hover,.nav-btn.active{background:rgba(245,166,35,.12);box-shadow:0 0 0 1px var(--gold)}
+.nav-btn .tooltip{
+  position:absolute;left:52px;white-space:nowrap;
+  background:var(--card2);border:1px solid var(--border2);
+  font-family:var(--mono);font-size:10px;color:var(--white);
+  padding:4px 10px;border-radius:4px;pointer-events:none;
+  opacity:0;transition:.15s;z-index:500;letter-spacing:.5px;
+}
+.nav-btn:hover .tooltip{opacity:1}
+.nav-sep{width:32px;height:1px;background:var(--border);margin:4px 0}
+
+.sidebar{
+  width:360px;flex-shrink:0;border-right:1px solid var(--border);
+  background:rgba(17,21,32,.85);overflow-y:auto;display:flex;flex-direction:column;
+}
+.sidebar::-webkit-scrollbar{width:3px}
+.sidebar::-webkit-scrollbar-thumb{background:var(--border2)}
+
+.content{flex:1;overflow-y:auto;display:flex;flex-direction:column}
+.content::-webkit-scrollbar{width:4px}
+.content::-webkit-scrollbar-thumb{background:var(--border2)}
+
+/* SIDEBAR FORM */
+.form-header{
+  padding:20px 20px 0;
+  display:flex;align-items:center;justify-content:space-between;
+}
+.form-header h2{font-size:13px;font-weight:700;letter-spacing:.5px;color:var(--white)}
+.sector-tabs{
+  display:flex;flex-wrap:wrap;gap:6px;padding:14px 16px;
+  border-bottom:1px solid var(--border);
+}
+.stab{
+  padding:5px 10px;border-radius:5px;font-family:var(--mono);font-size:9px;
+  letter-spacing:1px;cursor:pointer;border:1px solid var(--border2);
+  color:var(--muted);background:transparent;transition:.2s;text-transform:uppercase;
+}
+.stab:hover{border-color:var(--gold);color:var(--gold)}
+.stab.active{background:rgba(245,166,35,.12);border-color:var(--gold);color:var(--gold)}
+
+.form-body{padding:16px;flex:1}
+.flabel{font-family:var(--mono);font-size:9px;color:var(--muted);letter-spacing:1.5px;text-transform:uppercase;display:block;margin-bottom:5px}
+.finput,.fselect,.ftextarea{
+  width:100%;background:var(--card);border:1px solid var(--border2);
+  color:var(--white);padding:9px 12px;font-family:var(--mono);font-size:11px;
+  border-radius:6px;outline:none;transition:.2s;
+}
+.finput:focus,.fselect:focus{border-color:var(--gold);box-shadow:0 0 0 3px rgba(245,166,35,.1)}
+.finput::placeholder{color:var(--dim)}
+.fselect option{background:var(--card)}
+.frow{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px}
+.fgroup{margin-bottom:12px}
+.fsection{
+  font-family:var(--mono);font-size:8px;letter-spacing:2px;color:var(--cyan);
+  text-transform:uppercase;margin:16px 0 10px;
+  display:flex;align-items:center;gap:8px;
+}
+.fsection::after{content:'';flex:1;height:1px;background:linear-gradient(90deg,var(--border2),transparent)}
+
+/* TAX PREVIEW BOX */
+.tax-preview{
+  background:var(--card);border:1px solid var(--border2);border-radius:8px;
+  padding:14px;margin-bottom:14px;
+}
+.tp-head{font-family:var(--mono);font-size:8px;letter-spacing:2px;color:var(--muted);text-transform:uppercase;margin-bottom:10px}
+.tp-row{display:flex;justify-content:space-between;font-family:var(--mono);font-size:11px;padding:4px 0}
+.tp-row span:first-child{color:var(--muted)}
+.tp-divider{border-top:1px solid var(--border);margin:6px 0}
+.tp-total{display:flex;justify-content:space-between;font-family:var(--mono);font-size:13px;font-weight:600;padding:6px 0}
+.tp-total span:first-child{color:var(--muted)}
+.tp-total span:last-child{color:var(--gold2)}
+
+/* MINE BUTTON */
+.mine-btn{
+  width:100%;padding:14px;border:none;border-radius:8px;
+  background:linear-gradient(135deg,#d4891a,var(--gold),#ffd166);
+  color:#000;font-family:var(--display);font-size:13px;font-weight:700;
+  letter-spacing:1.5px;cursor:pointer;position:relative;overflow:hidden;
+  transition:transform .15s,box-shadow .15s;
+}
+.mine-btn:hover{transform:translateY(-1px);box-shadow:0 8px 28px rgba(245,166,35,.35)}
+.mine-btn:active{transform:translateY(0)}
+.mine-btn:disabled{background:var(--card2);color:var(--dim);cursor:not-allowed;transform:none;box-shadow:none}
+.mine-progress{margin-top:10px;display:none}
+.prog-track{height:3px;background:var(--border);border-radius:2px;overflow:hidden}
+.prog-fill{height:100%;background:linear-gradient(90deg,var(--gold),var(--cyan));width:0%;transition:width .1s;border-radius:2px}
+.prog-msg{font-family:var(--mono);font-size:9px;color:var(--gold);letter-spacing:1px;margin-bottom:5px}
+
+/* TREASURY MINI */
+.treasury{padding:0 16px 16px}
+.t-row{display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid var(--border)}
+.t-row:last-child{border-bottom:none}
+.t-lbl{font-family:var(--mono);font-size:9px;color:var(--muted);letter-spacing:.5px}
+.t-val{font-family:var(--mono);font-size:12px;font-weight:600}
+
+/* CHAIN STATUS */
+.chain-status{
+  margin:0 16px 16px;padding:10px 14px;border-radius:6px;
+  font-family:var(--mono);font-size:10px;display:flex;align-items:center;gap:8px;
+  border:1px solid;letter-spacing:.5px;
+}
+.cs-ok{background:rgba(0,184,148,.07);border-color:rgba(0,184,148,.3);color:var(--teal)}
+.cs-err{background:rgba(255,71,87,.07);border-color:rgba(255,71,87,.3);color:var(--red);animation:borderflash .8s infinite}
+@keyframes borderflash{0%,100%{border-color:rgba(255,71,87,.3)}50%{border-color:rgba(255,71,87,.8)}}
+
+/* CONTENT TABS */
+.ctabs{
+  display:flex;border-bottom:1px solid var(--border);
+  background:rgba(17,21,32,.9);padding:0 20px;
+  position:sticky;top:0;z-index:50;
+}
+.ctab{
+  padding:14px 16px;font-family:var(--mono);font-size:10px;letter-spacing:1.5px;
+  text-transform:uppercase;cursor:pointer;color:var(--dim);
+  border-bottom:2px solid transparent;background:none;border-left:none;border-right:none;border-top:none;
+  transition:.2s;white-space:nowrap;
+}
+.ctab:hover{color:var(--muted)}
+.ctab.active{color:var(--gold);border-bottom-color:var(--gold)}
+
+.page{padding:20px;display:none;animation:fadein .25s ease}
+.page.active{display:block}
+@keyframes fadein{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+
+/* CARDS */
+.gcard{background:var(--card);border:1px solid var(--border2);border-radius:10px;overflow:hidden;margin-bottom:16px}
+.gcard-head{
+  padding:14px 18px;border-bottom:1px solid var(--border);
+  display:flex;align-items:center;justify-content:space-between;
+}
+.gcard-title{font-family:var(--mono);font-size:10px;letter-spacing:2px;color:var(--muted);text-transform:uppercase}
+.gcard-body{padding:18px}
+
+/* STAT GRID */
+.stat-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px}
+.scard{background:var(--card);border:1px solid var(--border2);border-radius:10px;padding:16px;position:relative;overflow:hidden}
+.scard::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:var(--accent-clr,var(--gold))}
+.scard-val{font-family:var(--mono);font-size:20px;font-weight:700;color:var(--white);margin-bottom:4px}
+.scard-lbl{font-family:var(--mono);font-size:8px;color:var(--muted);letter-spacing:1.5px;text-transform:uppercase}
+.scard-sub{font-family:var(--mono);font-size:10px;color:var(--dim);margin-top:4px}
+
+/* BLOCK ITEMS */
+.block-item{
+  background:var(--card);border:1px solid var(--border2);border-radius:10px;
+  margin-bottom:12px;overflow:hidden;transition:border-color .2s;cursor:pointer;
+}
+.block-item:hover{border-color:var(--gold)}
+.block-item.tampered-b{border-color:var(--red);box-shadow:0 0 0 1px rgba(255,71,87,.2)}
+.block-head{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:12px 16px;
+}
+.bh-left{display:flex;align-items:center;gap:10px}
+.block-num{font-family:var(--mono);font-size:10px;font-weight:600;color:var(--gold);letter-spacing:1px}
+.type-badge{
+  padding:3px 9px;border-radius:4px;font-family:var(--mono);font-size:8px;
+  letter-spacing:1px;font-weight:600;text-transform:uppercase;
+}
+.status-badge{padding:3px 9px;border-radius:4px;font-family:var(--mono);font-size:8px;letter-spacing:1px;font-weight:600}
+.sb-valid{background:rgba(0,184,148,.1);border:1px solid rgba(0,184,148,.3);color:var(--teal)}
+.sb-tamper{background:rgba(255,71,87,.1);border:1px solid rgba(255,71,87,.3);color:var(--red)}
+.sb-genesis{background:rgba(245,166,35,.1);border:1px solid rgba(245,166,35,.3);color:var(--gold)}
+.bh-right{display:flex;align-items:center;gap:10px}
+.hash-chip{font-family:var(--mono);font-size:8px;color:var(--dim);background:var(--card2);padding:3px 8px;border-radius:3px;max-width:130px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.bts{font-family:var(--mono);font-size:9px;color:var(--dim)}
+
+.block-detail{border-top:1px solid var(--border);padding:14px 16px;display:none}
+.block-detail.open{display:block}
+.bd-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:12px}
+.bd-cell{background:var(--card2);border-radius:6px;padding:9px 11px}
+.bd-lbl{font-family:var(--mono);font-size:8px;color:var(--dim);letter-spacing:1px;text-transform:uppercase;margin-bottom:3px}
+.bd-val{font-family:var(--mono);font-size:11px;color:var(--white)}
+.bd-val.gold{color:var(--gold2)}
+.bd-val.cyan{color:var(--cyan)}
+.bd-val.teal{color:var(--teal)}
+.bd-val.red{color:var(--red)}
+.hash-display{
+  background:var(--card2);border:1px solid var(--border);border-radius:6px;
+  padding:10px 12px;font-family:var(--mono);font-size:8px;color:var(--muted);
+  word-break:break-all;line-height:1.9;margin-top:8px;
+}
+.hash-display span{color:var(--dim)}
+
+/* CHAIN CONNECTOR */
+.chain-conn{text-align:center;color:var(--dim);font-size:12px;margin:4px 0;font-family:var(--mono)}
+
+/* DATA TABLE */
+.dtable{width:100%;border-collapse:collapse;font-size:11px}
+.dtable th{font-family:var(--mono);font-size:8px;letter-spacing:1.5px;color:var(--dim);text-transform:uppercase;text-align:left;padding:8px 12px;border-bottom:1px solid var(--border2)}
+.dtable td{padding:10px 12px;border-bottom:1px solid var(--border);font-family:var(--mono)}
+.dtable tr:last-child td{border-bottom:none}
+.dtable tr:hover td{background:var(--card2)}
+
+/* BAR CHART */
+.bar-wrap{margin-bottom:10px}
+.bar-row{display:flex;align-items:center;gap:10px;margin-bottom:7px}
+.bar-lbl{width:120px;font-family:var(--mono);font-size:9px;color:var(--muted);flex-shrink:0;text-overflow:ellipsis;overflow:hidden;white-space:nowrap}
+.bar-track{flex:1;height:6px;background:var(--card2);border-radius:3px;overflow:hidden}
+.bar-fill{height:100%;border-radius:3px;transition:width .6s ease}
+.bar-amt{width:90px;font-family:var(--mono);font-size:9px;color:var(--white);text-align:right;flex-shrink:0}
+
+/* DONUT CHART */
+.donut-wrap{display:flex;align-items:center;gap:24px}
+.donut-legend{display:flex;flex-direction:column;gap:8px;flex:1}
+.legend-row{display:flex;align-items:center;gap:8px;font-family:var(--mono);font-size:9px}
+.legend-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.legend-lbl{color:var(--muted);flex:1}
+.legend-val{color:var(--white)}
+
+/* VERIFY */
+.verify-box{border-radius:10px;padding:16px 20px;margin-bottom:14px;font-family:var(--mono);font-size:11px;line-height:1.8;border:1px solid}
+.vok{background:rgba(0,184,148,.06);border-color:rgba(0,184,148,.25);color:var(--teal)}
+.verr{background:rgba(255,71,87,.06);border-color:rgba(255,71,87,.25);color:var(--red)}
+.tamper-row-v{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:10px 14px;background:var(--card);border:1px solid var(--border2);
+  border-radius:8px;margin-bottom:8px;
+}
+.tamper-row-v span{font-family:var(--mono);font-size:10px;color:var(--muted)}
+.tamper-row-v strong{color:var(--white)}
+.btn-tamper{padding:5px 12px;background:transparent;border:1px solid var(--red);color:var(--red);font-family:var(--mono);font-size:9px;letter-spacing:1px;border-radius:4px;cursor:pointer;transition:.2s}
+.btn-tamper:hover{background:var(--red);color:#000}
+.btn-restore{padding:8px 20px;background:transparent;border:1px solid var(--cyan);color:var(--cyan);font-family:var(--mono);font-size:10px;letter-spacing:1.5px;border-radius:6px;cursor:pointer;transition:.2s;margin-top:10px}
+.btn-restore:hover{background:var(--cyan);color:#000}
+
+/* AI */
+.ai-wrap{display:flex;gap:10px;margin-bottom:14px}
+.ai-wrap input{flex:1;background:var(--card);border:1px solid var(--border2);color:var(--white);padding:10px 14px;font-family:var(--mono);font-size:11px;border-radius:8px;outline:none}
+.ai-wrap input:focus{border-color:var(--gold)}
+.btn-ai{padding:10px 20px;background:linear-gradient(135deg,var(--gold),var(--gold2));border:none;color:#000;font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:1.5px;border-radius:8px;cursor:pointer;white-space:nowrap}
+.btn-ai:hover{box-shadow:0 4px 16px rgba(245,166,35,.3)}
+.ai-output{background:var(--card);border:1px solid var(--border2);border-radius:10px;padding:18px;font-size:12px;line-height:1.9;color:var(--white);min-height:140px;white-space:pre-wrap}
+.ai-placeholder{color:var(--dim);font-family:var(--mono);font-size:10px}
+.qbtns{display:flex;flex-wrap:wrap;gap:7px;margin-top:14px}
+.qbtn{padding:6px 12px;background:var(--card);border:1px solid var(--border2);color:var(--muted);font-family:var(--mono);font-size:9px;letter-spacing:.5px;border-radius:5px;cursor:pointer;transition:.2s}
+.qbtn:hover{border-color:var(--gold);color:var(--gold)}
+
+/* FORM PANELS */
+.form-panel{display:none}
+.form-panel.active{display:block}
+
+/* CERTIFICATE */
+.cert-wrap{
+  font-family:var(--mono);font-size:10px;line-height:1.8;
+  background:var(--card2);border:1px solid var(--border2);border-radius:8px;
+  padding:20px;white-space:pre;overflow-x:auto;color:var(--white);
+  margin-bottom:12px;
+}
+.btn-dl{
+  padding:7px 16px;background:transparent;border:1px solid var(--gold);
+  color:var(--gold);font-family:var(--mono);font-size:9px;letter-spacing:1.5px;
+  border-radius:5px;cursor:pointer;transition:.2s;
+}
+.btn-dl:hover{background:var(--gold);color:#000}
+.btn-sm{
+  padding:6px 14px;background:transparent;border:1px solid var(--border2);
+  color:var(--muted);font-family:var(--mono);font-size:9px;letter-spacing:1px;
+  border-radius:5px;cursor:pointer;transition:.2s;
+}
+.btn-sm:hover{border-color:var(--cyan);color:var(--cyan)}
+
+/* EMPTY */
+.empty{text-align:center;padding:48px;color:var(--dim);font-family:var(--mono);font-size:10px;letter-spacing:1px}
+
+/* SECTOR COLORS */
+.t-income{background:rgba(0,212,255,.1);border:1px solid rgba(0,212,255,.3);color:var(--cyan)}
+.t-house{background:rgba(165,94,234,.1);border:1px solid rgba(165,94,234,.3);color:var(--purple)}
+.t-gst{background:rgba(245,166,35,.1);border:1px solid rgba(245,166,35,.3);color:var(--gold)}
+.t-corporate{background:rgba(0,184,148,.1);border:1px solid rgba(0,184,148,.3);color:var(--teal)}
+.t-capital{background:rgba(255,107,157,.1);border:1px solid rgba(255,107,157,.3);color:var(--pink)}
+.t-vehicle{background:rgba(74,144,217,.1);border:1px solid rgba(74,144,217,.3);color:var(--blue)}
+.t-customs{background:rgba(255,71,87,.1);border:1px solid rgba(255,71,87,.3);color:var(--red)}
+.t-professional{background:rgba(255,214,102,.1);border:1px solid rgba(255,214,102,.3);color:var(--gold2)}
+.t-stamp{background:rgba(0,212,255,.08);border:1px solid rgba(0,212,255,.2);color:#7eddff}
+.t-agriculture{background:rgba(0,184,148,.08);border:1px solid rgba(0,184,148,.2);color:#7affd6}
+
+/* SCROLLBAR */
+::-webkit-scrollbar{width:3px;height:3px}
+::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px}
+
+/* TOGGLE SWITCH */
+.toggle-wrap{display:flex;align-items:center;gap:10px;margin-bottom:12px}
+.toggle{width:38px;height:20px;border-radius:10px;background:var(--border2);position:relative;cursor:pointer;transition:.2s;flex-shrink:0}
+.toggle.on{background:var(--gold)}
+.toggle::after{content:'';position:absolute;width:14px;height:14px;border-radius:50%;background:#fff;top:3px;left:3px;transition:.2s}
+.toggle.on::after{left:21px}
+.toggle-lbl{font-family:var(--mono);font-size:10px;color:var(--muted)}
+
+/* INFO PILL */
+.info-pill{
+  display:inline-flex;align-items:center;gap:6px;
+  background:rgba(0,212,255,.07);border:1px solid rgba(0,212,255,.2);
+  border-radius:4px;padding:4px 10px;font-family:var(--mono);font-size:9px;color:var(--cyan);
+  letter-spacing:.5px;margin-bottom:12px;
+}
+
+/* ===== ROLE LOGIN OVERLAY ===== */
+#login-overlay{
+  position:fixed;inset:0;z-index:999;background:var(--ink);
+  display:flex;align-items:center;justify-content:center;flex-direction:column;
+}
+.login-card{
+  width:420px;background:var(--card);border:1px solid var(--border2);border-radius:10px;padding:32px;
+}
+.login-title{font-family:var(--mono);font-size:11px;letter-spacing:2px;color:var(--muted);text-transform:uppercase;margin-bottom:4px;text-align:center}
+.login-sub{font-size:18px;color:var(--white);text-align:center;margin-bottom:24px;font-weight:600}
+.role-btn{
+  width:100%;text-align:left;background:var(--card2);border:1px solid var(--border2);border-radius:8px;
+  padding:14px 16px;margin-bottom:10px;cursor:pointer;transition:.15s;color:var(--white);
+}
+.role-btn:hover{border-color:var(--gold);background:rgba(245,166,35,.08)}
+.role-btn .rb-name{font-weight:600;font-size:13px}
+.role-btn .rb-desc{font-family:var(--mono);font-size:9px;color:var(--muted);margin-top:3px;letter-spacing:.5px}
+
+/* ===== ROLE BADGE / TOPBAR ===== */
+.role-badge{
+  font-family:var(--mono);font-size:9px;letter-spacing:1.5px;text-transform:uppercase;
+  border:1px solid var(--border2);border-radius:4px;padding:4px 10px;color:var(--gold2);
+  display:flex;align-items:center;gap:8px;
+}
+.role-badge .logout-link{color:var(--muted);cursor:pointer;text-decoration:underline}
+.role-badge .logout-link:hover{color:var(--red)}
+
+/* ===== ROLE-GATED VISIBILITY ===== */
+.role-hidden{display:none !important}
+
+/* ===== ROLES ADMIN PANEL ===== */
+.role-row{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:10px 12px;border-bottom:1px solid var(--border);font-family:var(--mono);font-size:11px;
+}
+.role-row:last-child{border-bottom:none}
+.role-tag{
+  font-size:9px;letter-spacing:1px;text-transform:uppercase;padding:3px 8px;border-radius:4px;
+  border:1px solid var(--border2);
+}
+.role-tag.Admin{color:var(--gold);border-color:var(--gold)}
+.role-tag.TaxOfficer{color:var(--teal);border-color:var(--teal)}
+.role-tag.Auditor{color:var(--cyan);border-color:var(--cyan)}
+.role-tag.None{color:var(--dim)}
+</style>
+</head>
+<body>
+
+<!-- ROLE LOGIN OVERLAY -->
+<div id="login-overlay">
+  <div class="login-card">
+    <div class="login-title">GovTaxChain Access</div>
+    <div class="login-sub">Sign in</div>
+    <div class="fgroup">
+      <label class="flabel">Role</label>
+      <select class="fselect" id="login-role">
+        <option value="admin">🛡️ Admin — manages the system</option>
+        <option value="officer">🧾 Tax Officer — creates/updates tax records</option>
+        <option value="auditor">🔎 Auditor — view &amp; verify only</option>
+      </select>
+    </div>
+    <div class="fgroup">
+      <label class="flabel">Password</label>
+      <input type="password" class="finput" id="login-password" placeholder="Enter password" onkeydown="if(event.key==='Enter') attemptLogin()"/>
+    </div>
+    <button class="role-btn" style="text-align:center;font-weight:600;cursor:pointer" onclick="attemptLogin()">
+      Sign In
+    </button>
+    <div id="login-error" style="color:var(--red);font-family:var(--mono);font-size:10px;margin-top:12px;text-align:center;min-height:14px"></div>
+  </div>
+</div>
+
+<header class="topbar">
+  <div class="logo">
+    <div class="logo-badge">G</div>
+    <div>
+      <div class="logo-text">Gov<em>Tax</em>Chain</div>
+      <div class="logo-sub">National Blockchain Tax Administration System</div>
+    </div>
+  </div>
+  <div class="topbar-right">
+    <div class="tbar-stat"><div class="tbar-val" id="tb-revenue">₹0</div><div class="tbar-lbl">Total Revenue</div></div>
+    <div class="tbar-stat"><div class="tbar-val" id="tb-taxpayers">0</div><div class="tbar-lbl">Taxpayers</div></div>
+    <div class="tbar-stat"><div class="tbar-val" id="tb-blocks">0</div><div class="tbar-lbl">Blocks</div></div>
+    <div class="fy-badge" id="fy-label">FY 2025–26</div>
+    <div class="role-badge" id="role-badge" style="display:none">
+      <span id="role-badge-text"></span>
+      <span class="logout-link" onclick="logout()">switch</span>
+    </div>
+    <div class="pulse"></div>
+  </div>
+</header>
+
+<div class="shell">
+  <!-- ICON NAV -->
+  <nav class="nav">
+    <button class="nav-btn active" onclick="setNav(this,'dashboard')" title="">📊<span class="tooltip">Dashboard</span></button>
+    <button class="nav-btn" onclick="setNav(this,'ledger')" title="">🔗<span class="tooltip">Ledger</span></button>
+    <button class="nav-btn" onclick="setNav(this,'vault')" title="">🏛️<span class="tooltip">Tax Vault</span></button>
+    <div class="nav-sep"></div>
+    <button class="nav-btn" onclick="setNav(this,'verify')" title="">🔐<span class="tooltip">Verify</span></button>
+    <button class="nav-btn" onclick="setNav(this,'audit')" title="">🤖<span class="tooltip">AI Audit</span></button>
+    <button class="nav-btn" onclick="setNav(this,'certs')" title="">📜<span class="tooltip">Certificates</span></button>
+    <button class="nav-btn" onclick="setNav(this,'summary')" title="">🧮<span class="tooltip">Tax Summary</span></button>
+    <div class="nav-sep" id="nav-roles-sep" style="display:none"></div>
+    <button class="nav-btn role-hidden" id="nav-roles-btn" onclick="setNav(this,'roles')" title="">👥<span class="tooltip">Roles</span></button>
+  </nav>
+
+  <!-- SIDEBAR FORM (Tax Officer / Admin only — Auditor is view/verify only) -->
+  <aside class="sidebar" id="sidebar-form">
+    <div class="form-header">
+      <h2>FILE TAX TRANSACTION</h2>
+      <div class="pulse" style="margin-left:8px"></div>
+    </div>
+
+    <!-- SECTOR SELECTION -->
+    <div class="sector-tabs" id="sector-tabs">
+      <button class="stab active" onclick="setSector('income',this)">Income</button>
+      <button class="stab" onclick="setSector('house',this)">House</button>
+      <button class="stab" onclick="setSector('gst',this)">GST</button>
+      <button class="stab" onclick="setSector('corporate',this)">Corporate</button>
+      <button class="stab" onclick="setSector('capital',this)">Capital</button>
+      <button class="stab" onclick="setSector('vehicle',this)">Vehicle</button>
+      <button class="stab" onclick="setSector('customs',this)">Customs</button>
+      <button class="stab" onclick="setSector('professional',this)">Prof Tax</button>
+      <button class="stab" onclick="setSector('stamp',this)">Stamp</button>
+      <button class="stab" onclick="setSector('agriculture',this)">Agri</button>
+    </div>
+
+    <div class="form-body">
+      <!-- COMMON FIELDS -->
+      <div class="fgroup">
+        <label class="flabel">Taxpayer / Entity Name</label>
+        <input class="finput" id="f-name" placeholder="Full name or company name"/>
+      </div>
+      <div class="frow">
+        <div class="fgroup" style="margin-bottom:0">
+          <label class="flabel">PAN / TAN</label>
+          <input class="finput" id="f-pan" placeholder="ABCDE1234F" maxlength="10"/>
+        </div>
+        <div class="fgroup" style="margin-bottom:0">
+          <label class="flabel">Assessment Year</label>
+          <select class="fselect" id="f-ay">
+            <option>AY 2025-26</option>
+            <option>AY 2024-25</option>
+            <option>AY 2023-24</option>
+          </select>
+        </div>
+      </div>
+      <div class="fgroup" style="margin-top:10px">
+        <label class="flabel">State</label>
+        <select class="fselect" id="f-state">
+          <option>Karnataka</option><option>Maharashtra</option><option>Delhi</option>
+          <option>Tamil Nadu</option><option>Gujarat</option><option>Uttar Pradesh</option>
+          <option>West Bengal</option><option>Telangana</option><option>Rajasthan</option>
+          <option>Kerala</option><option>Punjab</option><option>Haryana</option>
+          <option>Madhya Pradesh</option><option>Bihar</option><option>Odisha</option>
+        </select>
+      </div>
+
+      <!-- ===== INCOME TAX FORM ===== -->
+      <div class="form-panel active" id="fp-income">
+        <div class="fsection">Income Tax — Employee</div>
+        <div class="frow">
+          <div class="fgroup" style="margin-bottom:0">
+            <label class="flabel" id="it-salary-label">Gross Salary (₹/yr)</label>
+            <input class="finput" id="it-salary" type="number" placeholder="1200000" oninput="calcIncome()"/>
+          </div>
+          <div class="fgroup" style="margin-bottom:0" id="it-hra-group">
+            <label class="flabel">HRA Received (₹/yr)</label>
+            <input class="finput" id="it-hra" type="number" placeholder="240000" oninput="calcIncome()"/>
+          </div>
+        </div>
+        <div class="frow" style="margin-top:10px">
+          <div class="fgroup" style="margin-bottom:0" id="it-rent-group">
+            <label class="flabel">Rent Paid (₹/yr)</label>
+            <input class="finput" id="it-rent" type="number" placeholder="180000" oninput="calcIncome()"/>
+          </div>
+          <div class="fgroup" style="margin-bottom:0">
+            <label class="flabel">80C Investments (₹)</label>
+            <input class="finput" id="it-80c" type="number" placeholder="150000" oninput="calcIncome()"/>
+          </div>
+        </div>
+
+        <div class="frow" style="margin-top:10px">
+          <div class="fgroup" style="margin-bottom:0">
+            <label class="flabel">80D Medical (₹)</label>
+            <input class="finput" id="it-80d" type="number" placeholder="25000" oninput="calcIncome()"/>
+          </div>
+          <div class="fgroup" style="margin-bottom:0">
+            <label class="flabel">NPS 80CCD (₹)</label>
+            <input class="finput" id="it-nps" type="number" placeholder="50000" oninput="calcIncome()"/>
+          </div>
+        </div>
+        <div class="fgroup" style="margin-top:10px">
+          <label class="flabel">Other Income (₹/yr)</label>
+          <input class="finput" id="it-other" type="number" placeholder="0" oninput="calcIncome()"/>
+        </div>
+        <div class="fgroup">
+          <label class="flabel">Tax Regime</label>
+          <select class="fselect" id="it-regime" onchange="calcIncome()">
+            <option value="new">New Regime (2025-26 onward)</option>
+            <option value="old">Old Regime</option>
+          </select>
+        </div>
+        <div class="fgroup">
+          <label class="flabel">Employment Type</label>
+          <select class="fselect" id="it-emptype" onchange="updateEmploymentUI(); calcIncome()">
+            <option>Salaried</option><option>Self-Employed</option><option>Government Employee</option><option>Pensioner</option>
+          </select>
+        </div>
+        <div class="fgroup" id="it-compmethod-group" style="display:none">
+          <label class="flabel">Computation Method</label>
+          <select class="fselect" id="it-compmethod" onchange="updateEmploymentUI(); calcIncome()">
+            <option value="presumptive">Presumptive Taxation (44ADA / 44AD)</option>
+            <option value="actual">Actual Business Expenses</option>
+          </select>
+        </div>
+        <div class="fgroup" id="it-proftype-group" style="display:none">
+          <label class="flabel">Profession Type</label>
+          <select class="fselect" id="it-proftype" onchange="updateEmploymentUI(); calcIncome()">
+            <option value="44ada">Specified Professional (44ADA \u2014 50% of receipts)</option>
+            <option value="44ad">Other Business (44AD)</option>
+          </select>
+        </div>
+        <div class="fgroup" id="it-txnmode-group" style="display:none">
+          <label class="flabel">Transaction Mode (44AD)</label>
+          <select class="fselect" id="it-txnmode" onchange="calcIncome()">
+            <option value="digital">Digital / Banking Channels (6%)</option>
+            <option value="cash">Cash (8%)</option>
+          </select>
+        </div>
+        <div class="fgroup" id="it-bizexp-group" style="display:none">
+          <label class="flabel">Business Expenses (₹/yr)</label>
+          <input class="finput" id="it-bizexp" type="number" placeholder="300000" oninput="calcIncome()"/>
+        </div>
+      </div>
+
+      <!-- ===== HOUSE TAX FORM ===== -->
+      <div class="form-panel" id="fp-house">
+        <div class="fsection">House Property Tax</div>
+        <div class="fgroup">
+          <label class="flabel">Property Type</label>
+          <select class="fselect" id="ht-type" onchange="calcHouse()">
+            <option value="selfoccupied">Self-Occupied</option>
+            <option value="letout">Let-Out (Rented)</option>
+            <option value="vacant">Deemed Let-Out</option>
+            <option value="commercial">Commercial Property</option>
+          </select>
+        </div>
+        <div class="frow">
+          <div class="fgroup" style="margin-bottom:0">
+            <label class="flabel">Property Value (₹)</label>
+            <input class="finput" id="ht-value" type="number" placeholder="5000000" oninput="calcHouse()"/>
+          </div>
+          <div class="fgroup" style="margin-bottom:0">
+            <label class="flabel">Built-up Area (sqft)</label>
+            <input class="finput" id="ht-area" type="number" placeholder="1200" oninput="calcHouse()"/>
+          </div>
+        </div>
+        <div class="frow" style="margin-top:10px">
+          <div class="fgroup" style="margin-bottom:0">
+            <label class="flabel">Annual Rent (₹) if let-out</label>
+            <input class="finput" id="ht-rent" type="number" placeholder="240000" oninput="calcHouse()"/>
+          </div>
+          <div class="fgroup" style="margin-bottom:0">
+            <label class="flabel">Municipal Tax Paid (₹)</label>
+            <input class="finput" id="ht-mun" type="number" placeholder="12000" oninput="calcHouse()"/>
+          </div>
+        </div>
+        <div class="frow" style="margin-top:10px">
+          <div class="fgroup" style="margin-bottom:0">
+            <label class="flabel">Home Loan Interest (₹)</label>
+            <input class="finput" id="ht-loan" type="number" placeholder="200000" oninput="calcHouse()"/>
+          </div>
+          <div class="fgroup" style="margin-bottom:0">
+            <label class="flabel">Property Age (yrs)</label>
+            <input class="finput" id="ht-age" type="number" placeholder="5" oninput="calcHouse()"/>
+          </div>
+        </div>
+        <div class="fgroup" style="margin-top:10px">
+          <label class="flabel">Property Zone</label>
+          <select class="fselect" id="ht-zone">
+            <option value="A">Zone A — Metro Core</option>
+            <option value="B">Zone B — Urban</option>
+            <option value="C">Zone C — Semi-Urban</option>
+            <option value="D">Zone D — Rural</option>
+          </select>
+        </div>
+        <div class="fgroup">
+          <label class="flabel">Property Address</label>
+          <input class="finput" id="ht-addr" placeholder="Plot No, Street, City"/>
+        </div>
+      </div>
+
+      <!-- ===== GST FORM ===== -->
+      <div class="form-panel" id="fp-gst">
+        <div class="fsection">GST — Goods & Services Tax</div>
+        <div class="frow">
+          <div class="fgroup" style="margin-bottom:0">
+            <label class="flabel">GSTIN</label>
+            <input class="finput" id="gst-gstin" placeholder="27AAPFU0939F1ZV" maxlength="15"/>
+          </div>
+          <div class="fgroup" style="margin-bottom:0">
+            <label class="flabel">Buyer State</label>
+            <select class="fselect" id="gst-buyerstate" onchange="calcGST()">
+              <option>Karnataka</option><option>Maharashtra</option><option>Delhi</option>
+              <option>Tamil Nadu</option><option>Gujarat</option><option>Uttar Pradesh</option>
+              <option>West Bengal</option><option>Telangana</option><option>Rajasthan</option><option>Kerala</option>
+            </select>
+          </div>
+        </div>
+        <div class="frow" style="margin-top:10px">
+          <div class="fgroup" style="margin-bottom:0">
+            <label class="flabel">Item / Service</label>
+            <input class="finput" id="gst-item" placeholder="IT Services"/>
+          </div>
+          <div class="fgroup" style="margin-bottom:0">
+            <label class="flabel">HSN / SAC Code</label>
+            <input class="finput" id="gst-hsn" placeholder="998314"/>
+          </div>
+        </div>
+        <div class="frow" style="margin-top:10px">
+          <div class="fgroup" style="margin-bottom:0">
+            <label class="flabel">Invoice Value (₹)</label>
+            <input class="finput" id="gst-amount" type="number" placeholder="100000" oninput="calcGST()"/>
+          </div>
+          <div class="fgroup" style="margin-bottom:0">
+            <label class="flabel">GST Rate</label>
+            <select class="fselect" id="gst-rate" onchange="calcGST()">
+              <option value="0">0% Exempt</option>
+              <option value="5">5% Essential</option>
+              <option value="12">12% Standard</option>
+              <option value="18" selected>18% Services</option>
+              <option value="28">28% Luxury</option>
+            </select>
+          </div>
+        </div>
+        <div class="fgroup" style="margin-top:10px">
+          <label class="flabel">Transaction Type</label>
+          <select class="fselect" id="gst-txtype" onchange="calcGST()">
+            <option value="intrastate">Intra-State (CGST + SGST)</option>
+            <option value="interstate">Inter-State (IGST)</option>
+            <option value="export">Export (Zero-rated)</option>
+            <option value="sez">SEZ Supply</option>
+          </select>
+        </div>
+        <div class="fgroup">
+          <label class="flabel">Reverse Charge?</label>
+          <select class="fselect" id="gst-rcm">
+            <option value="no">No</option>
+            <option value="yes">Yes — RCM Applicable</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- ===== CORPORATE TAX ===== -->
+      <div class="form-panel" id="fp-corporate">
+        <div class="fsection">Corporate Tax</div>
+        <div class="fgroup">
+          <label class="flabel">Company Type</label>
+          <select class="fselect" id="ct-type" onchange="calcCorporate()">
+            <option value="domestic">Domestic Company</option>
+            <option value="startup">Startup (Sec 80-IAC)</option>
+            <option value="msme">MSME / Small Co.</option>
+            <option value="foreign">Foreign Company</option>
+            <option value="llp">LLP</option>
+          </select>
+        </div>
+        <div class="frow">
+          <div class="fgroup" style="margin-bottom:0">
+            <label class="flabel">Annual Turnover (₹)</label>
+            <input class="finput" id="ct-turnover" type="number" placeholder="50000000" oninput="calcCorporate()"/>
+          </div>
+          <div class="fgroup" style="margin-bottom:0">
+            <label class="flabel">Net Profit / PBT (₹)</label>
+            <input class="finput" id="ct-profit" type="number" placeholder="10000000" oninput="calcCorporate()"/>
+          </div>
+        </div>
+        <div class="frow" style="margin-top:10px">
+          <div class="fgroup" style="margin-bottom:0">
+            <label class="flabel">MAT Book Profit (₹)</label>
+            <input class="finput" id="ct-mat" type="number" placeholder="8000000" oninput="calcCorporate()"/>
+          </div>
+          <div class="fgroup" style="margin-bottom:0">
+            <label class="flabel">DDT Dividend Paid (₹)</label>
+            <input class="finput" id="ct-div" type="number" placeholder="0" oninput="calcCorporate()"/>
+          </div>
+        </div>
+        <div class="fgroup" style="margin-top:10px">
+          <label class="flabel">Industry Sector</label>
+          <select class="fselect" id="ct-sector">
+            <option>Information Technology</option><option>Manufacturing</option>
+            <option>Financial Services</option><option>Pharma / Healthcare</option>
+            <option>Infrastructure</option><option>E-Commerce</option>
+            <option>Retail</option><option>Energy / Power</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- ===== CAPITAL GAINS ===== -->
+      <div class="form-panel" id="fp-capital">
+        <div class="fsection">Capital Gains Tax</div>
+        <div class="fgroup">
+          <label class="flabel">Asset Type</label>
+          <select class="fselect" id="cg-asset" onchange="calcCapital()">
+            <option value="equity">Equity / Mutual Funds (Listed)</option>
+            <option value="debt">Debt Funds / Bonds</option>
+            <option value="property">Immovable Property</option>
+            <option value="gold">Gold / ETF</option>
+            <option value="business">Business Assets</option>
+            <option value="crypto">Crypto / VDA</option>
+          </select>
+        </div>
+        <div class="frow">
+          <div class="fgroup" style="margin-bottom:0">
+            <label class="flabel">Purchase Price (₹)</label>
+            <input class="finput" id="cg-buy" type="number" placeholder="500000" oninput="calcCapital()"/>
+          </div>
+          <div class="fgroup" style="margin-bottom:0">
+            <label class="flabel">Sale Price (₹)</label>
+            <input class="finput" id="cg-sell" type="number" placeholder="900000" oninput="calcCapital()"/>
+          </div>
+        </div>
+        <div class="frow" style="margin-top:10px">
+          <div class="fgroup" style="margin-bottom:0">
+            <label class="flabel">Holding Period</label>
+            <select class="fselect" id="cg-hold" onchange="calcCapital()">
+              <option value="stcg">Short Term</option>
+              <option value="ltcg">Long Term</option>
+            </select>
+          </div>
+          <div class="fgroup" style="margin-bottom:0">
+            <label class="flabel">Indexation Cost (₹)</label>
+            <input class="finput" id="cg-index" type="number" placeholder="0" oninput="calcCapital()"/>
+          </div>
+        </div>
+        <div class="fgroup" style="margin-top:10px">
+          <label class="flabel">Exemption (54/54EC) (₹)</label>
+          <input class="finput" id="cg-exempt" type="number" placeholder="0" oninput="calcCapital()"/>
+        </div>
+      </div>
+
+      <!-- ===== VEHICLE TAX ===== -->
+      <div class="form-panel" id="fp-vehicle">
+        <div class="fsection">Vehicle / Road Tax</div>
+        <div class="fgroup">
+          <label class="flabel">Vehicle Type</label>
+          <select class="fselect" id="vt-type" onchange="calcVehicle()">
+            <option value="2w_petrol">2-Wheeler — Petrol</option>
+            <option value="2w_ev">2-Wheeler — EV</option>
+            <option value="4w_petrol">4-Wheeler — Petrol (&lt;1200cc)</option>
+            <option value="4w_diesel">4-Wheeler — Diesel (1200cc+)</option>
+            <option value="4w_ev">4-Wheeler — EV</option>
+            <option value="4w_luxury">Luxury Car (&gt;40L)</option>
+            <option value="commercial_light">Commercial Light Vehicle</option>
+            <option value="commercial_heavy">Commercial Heavy Vehicle</option>
+          </select>
+        </div>
+        <div class="frow">
+          <div class="fgroup" style="margin-bottom:0">
+            <label class="flabel">Vehicle Cost (₹)</label>
+            <input class="finput" id="vt-cost" type="number" placeholder="800000" oninput="calcVehicle()"/>
+          </div>
+          <div class="fgroup" style="margin-bottom:0">
+            <label class="flabel">Engine CC / KW</label>
+            <input class="finput" id="vt-engine" type="number" placeholder="1200" oninput="calcVehicle()"/>
+          </div>
+        </div>
+        <div class="fgroup" style="margin-top:10px">
+          <label class="flabel">Registration Type</label>
+          <select class="fselect" id="vt-reg">
+            <option value="new">New Registration</option>
+            <option value="transfer">Re-Registration / Transfer</option>
+            <option value="renewal">Renewal</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- ===== CUSTOMS ===== -->
+      <div class="form-panel" id="fp-customs">
+        <div class="fsection">Customs / Import Duty</div>
+        <div class="frow">
+          <div class="fgroup" style="margin-bottom:0">
+            <label class="flabel">HS Code</label>
+            <input class="finput" id="cu-hs" placeholder="8471.30" />
+          </div>
+          <div class="fgroup" style="margin-bottom:0">
+            <label class="flabel">Country of Origin</label>
+            <select class="fselect" id="cu-origin">
+              <option>China</option><option>USA</option><option>Germany</option>
+              <option>Japan</option><option>South Korea</option><option>UK</option>
+              <option>UAE</option><option>Other</option>
+            </select>
+          </div>
+        </div>
+        <div class="frow" style="margin-top:10px">
+          <div class="fgroup" style="margin-bottom:0">
+            <label class="flabel">CIF Value (₹)</label>
+            <input class="finput" id="cu-cif" type="number" placeholder="500000" oninput="calcCustoms()"/>
+          </div>
+          <div class="fgroup" style="margin-bottom:0">
+            <label class="flabel">BCD Rate (%)</label>
+            <select class="fselect" id="cu-bcd" onchange="calcCustoms()">
+              <option value="0">0%</option><option value="5">5%</option>
+              <option value="10">10%</option><option value="15">15%</option>
+              <option value="20">20%</option><option value="25">25%</option>
+              <option value="40">40%</option>
+            </select>
+          </div>
+        </div>
+        <div class="frow" style="margin-top:10px">
+          <div class="fgroup" style="margin-bottom:0">
+            <label class="flabel">Category</label>
+            <select class="fselect" id="cu-cat" onchange="calcCustoms()">
+              <option value="electronics">Electronics / IT</option>
+              <option value="machinery">Machinery</option>
+              <option value="pharma">Pharma / Chemicals</option>
+              <option value="textile">Textiles</option>
+              <option value="food">Food / Agri</option>
+              <option value="luxury">Luxury Goods</option>
+            </select>
+          </div>
+          <div class="fgroup" style="margin-bottom:0">
+            <label class="flabel">IGST on Import</label>
+            <select class="fselect" id="cu-igst" onchange="calcCustoms()">
+              <option value="5">5%</option><option value="12">12%</option>
+              <option value="18" selected>18%</option><option value="28">28%</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== PROFESSIONAL TAX ===== -->
+      <div class="form-panel" id="fp-professional">
+        <div class="fsection">Professional Tax (State)</div>
+        <div class="fgroup">
+          <label class="flabel">Profession / Category</label>
+          <select class="fselect" id="pt-cat">
+            <option>Salaried Employee</option><option>Doctor</option><option>Lawyer / Advocate</option>
+            <option>CA / CS / CMA</option><option>Architect / Engineer</option>
+            <option>Trader</option><option>Contractor</option>
+          </select>
+        </div>
+        <div class="frow">
+          <div class="fgroup" style="margin-bottom:0">
+            <label class="flabel">Monthly Salary / Income (₹)</label>
+            <input class="finput" id="pt-salary" type="number" placeholder="50000" oninput="calcProfessional()"/>
+          </div>
+          <div class="fgroup" style="margin-bottom:0">
+            <label class="flabel">Months in FY</label>
+            <input class="finput" id="pt-months" type="number" placeholder="12" min="1" max="12" oninput="calcProfessional()"/>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== STAMP DUTY ===== -->
+      <div class="form-panel" id="fp-stamp">
+        <div class="fsection">Stamp Duty — Property Registration</div>
+        <div class="fgroup">
+          <label class="flabel">Transaction Type</label>
+          <select class="fselect" id="sd-type" onchange="calcStamp()">
+            <option value="sale">Sale / Purchase</option>
+            <option value="gift">Gift Deed</option>
+            <option value="lease">Lease Agreement</option>
+            <option value="mortgage">Mortgage / Loan</option>
+            <option value="partition">Partition Deed</option>
+          </select>
+        </div>
+        <div class="frow">
+          <div class="fgroup" style="margin-bottom:0">
+            <label class="flabel">Market Value (₹)</label>
+            <input class="finput" id="sd-value" type="number" placeholder="5000000" oninput="calcStamp()"/>
+          </div>
+          <div class="fgroup" style="margin-bottom:0">
+            <label class="flabel">Property Category</label>
+            <select class="fselect" id="sd-cat" onchange="calcStamp()">
+              <option value="res">Residential</option>
+              <option value="comm">Commercial</option>
+              <option value="agri">Agricultural</option>
+            </select>
+          </div>
+        </div>
+        <div class="fgroup" style="margin-top:10px">
+          <label class="flabel">Gender of Buyer</label>
+          <select class="fselect" id="sd-gender" onchange="calcStamp()">
+            <option value="male">Male</option>
+            <option value="female">Female (Concession applicable)</option>
+            <option value="joint">Joint (Male+Female)</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- ===== AGRICULTURE ===== -->
+      <div class="form-panel" id="fp-agriculture">
+        <div class="fsection">Agriculture Income</div>
+        <div class="info-pill">🌾 Agricultural income is exempt u/s 10(1) but included for rate purposes</div>
+        <div class="frow">
+          <div class="fgroup" style="margin-bottom:0">
+            <label class="flabel">Agricultural Income (₹)</label>
+            <input class="finput" id="ag-income" type="number" placeholder="300000" oninput="calcAgriculture()"/>
+          </div>
+          <div class="fgroup" style="margin-bottom:0">
+            <label class="flabel">Non-Agri Income (₹)</label>
+            <input class="finput" id="ag-other" type="number" placeholder="200000" oninput="calcAgriculture()"/>
+          </div>
+        </div>
+        <div class="frow" style="margin-top:10px">
+          <div class="fgroup" style="margin-bottom:0">
+            <label class="flabel">Land Area (Acres)</label>
+            <input class="finput" id="ag-land" type="number" placeholder="5"/>
+          </div>
+          <div class="fgroup" style="margin-bottom:0">
+            <label class="flabel">Crop Type</label>
+            <select class="fselect" id="ag-crop">
+              <option>Rice / Paddy</option><option>Wheat</option>
+              <option>Sugarcane</option><option>Cotton</option>
+              <option>Horticulture</option><option>Other</option>
+            </select>
+          </div>
+        </div>
+        <div class="fgroup" style="margin-top:10px">
+          <label class="flabel">Land Revenue / Cess Paid (₹)</label>
+          <input class="finput" id="ag-cess" type="number" placeholder="5000" oninput="calcAgriculture()"/>
+        </div>
+      </div>
+
+      <!-- TAX PREVIEW -->
+      <div class="tax-preview" id="tax-preview" style="margin-top:14px">
+        <div class="tp-head" id="preview-title">LIVE TAX CALCULATION</div>
+        <div id="preview-rows"><div style="font-family:var(--mono);font-size:10px;color:var(--dim);text-align:center;padding:10px">Fill the form to see live calculation</div></div>
+        <div class="tp-divider"></div>
+        <div class="tp-total"><span>Total Tax Payable</span><span id="preview-total">₹0</span></div>
+      </div>
+
+      <button class="mine-btn" id="mine-btn" onclick="mineTaxBlock()">⛓ SEAL ON BLOCKCHAIN</button>
+      <div class="mine-progress" id="mine-progress">
+        <div class="prog-msg" id="prog-msg">HASHING TRANSACTION...</div>
+        <div class="prog-track"><div class="prog-fill" id="prog-fill"></div></div>
+      </div>
+    </div>
+
+    <!-- TREASURY SUMMARY -->
+    <div style="padding:0 16px">
+      <div class="fsection" style="margin-top:0">Treasury Summary</div>
+      <div class="treasury">
+        <div class="t-row"><span class="t-lbl">Total Revenue</span><span class="t-val" style="color:var(--gold2)" id="ts-total">₹0</span></div>
+        <div class="t-row"><span class="t-lbl">Income Tax</span><span class="t-val" style="color:var(--cyan)" id="ts-income">₹0</span></div>
+        <div class="t-row"><span class="t-lbl">GST Collection</span><span class="t-val" style="color:var(--gold)" id="ts-gst">₹0</span></div>
+        <div class="t-row"><span class="t-lbl">House Tax</span><span class="t-val" style="color:var(--purple)" id="ts-house">₹0</span></div>
+        <div class="t-row"><span class="t-lbl">Corporate Tax</span><span class="t-val" style="color:var(--teal)" id="ts-corporate">₹0</span></div>
+        <div class="t-row"><span class="t-lbl">Capital Gains</span><span class="t-val" style="color:var(--pink)" id="ts-capital">₹0</span></div>
+        <div class="t-row"><span class="t-lbl">Other Taxes</span><span class="t-val" style="color:var(--muted)" id="ts-other">₹0</span></div>
+        <div class="t-row"><span class="t-lbl">Blocks Mined</span><span class="t-val" style="color:var(--white)" id="ts-blocks">0</span></div>
+      </div>
+    </div>
+
+    <div class="chain-status cs-ok" id="chain-status">
+      <div class="pulse"></div>
+      <span id="cs-text">Chain ready — 0 blocks</span>
+    </div>
+  </aside>
+
+  <!-- MAIN CONTENT -->
+  <main class="content" id="main-content">
+    <!-- TAB BAR -->
+    <div class="ctabs" id="ctabs">
+      <button class="ctab active" onclick="showCTab('dashboard',this)">Dashboard</button>
+      <button class="ctab" onclick="showCTab('ledger',this)">Ledger</button>
+      <button class="ctab" onclick="showCTab('vault',this)">Tax Vault</button>
+      <button class="ctab" onclick="showCTab('verify',this)">Verify</button>
+      <button class="ctab" onclick="showCTab('audit',this)">AI Audit</button>
+      <button class="ctab" onclick="showCTab('certs',this)">Certificates</button>
+      <button class="ctab" onclick="showCTab('summary',this)">Tax Summary</button>
+      <button class="ctab role-hidden" id="ctab-roles" onclick="showCTab('roles',this)">Roles</button>
+    </div>
+
+    <!-- DASHBOARD PAGE -->
+    <div class="page active" id="page-dashboard">
+      <div class="stat-grid" id="dash-stats">
+        <div class="scard" style="--accent-clr:var(--gold2)"><div class="scard-val" id="d-revenue">₹0</div><div class="scard-lbl">Total Revenue</div><div class="scard-sub" id="d-rev-sub">Across all sectors</div></div>
+        <div class="scard" style="--accent-clr:var(--cyan)"><div class="scard-val" id="d-taxpayers">0</div><div class="scard-lbl">Taxpayers Registered</div><div class="scard-sub" id="d-tp-sub">Unique PAN/entities</div></div>
+        <div class="scard" style="--accent-clr:var(--teal)"><div class="scard-val" id="d-blocks">0</div><div class="scard-lbl">Blocks on Chain</div><div class="scard-sub">Immutable records</div></div>
+        <div class="scard" style="--accent-clr:var(--purple)"><div class="scard-val" id="d-compliance">100%</div><div class="scard-lbl">Chain Integrity</div><div class="scard-sub">Tamper-proof</div></div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px">
+        <div class="gcard">
+          <div class="gcard-head"><div class="gcard-title">Revenue by Sector</div></div>
+          <div class="gcard-body" id="sector-bars"><div class="empty">Mine transactions to see data</div></div>
+        </div>
+        <div class="gcard">
+          <div class="gcard-head"><div class="gcard-title">Sector Distribution</div></div>
+          <div class="gcard-body">
+            <div class="donut-wrap">
+              <canvas id="donut-canvas" width="140" height="140"></canvas>
+              <div class="donut-legend" id="donut-legend"><div style="font-family:var(--mono);font-size:9px;color:var(--dim)">No data yet</div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="gcard">
+        <div class="gcard-head"><div class="gcard-title">State-wise Collection</div></div>
+        <div class="gcard-body" id="state-bars"><div class="empty">No data yet</div></div>
+      </div>
+      <div class="gcard">
+        <div class="gcard-head">
+          <div class="gcard-title">Recent Transactions</div>
+          <button class="btn-dl" onclick="exportCSV()">↓ Export CSV</button>
+        </div>
+        <div style="overflow-x:auto">
+          <div id="recent-txns"><div class="empty">No transactions yet</div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- LEDGER PAGE -->
+    <div class="page" id="page-ledger">
+      <div id="ledger-blocks"><div class="empty">No blocks yet. File a tax transaction to start the chain.</div></div>
+    </div>
+
+    <!-- TAX VAULT PAGE -->
+    <div class="page" id="page-vault">
+      <div class="stat-grid">
+        <div class="scard" style="--accent-clr:var(--gold)"><div class="scard-val" id="v-income">₹0</div><div class="scard-lbl">Income Tax</div></div>
+        <div class="scard" style="--accent-clr:var(--gold2)"><div class="scard-val" id="v-gst">₹0</div><div class="scard-lbl">GST</div></div>
+        <div class="scard" style="--accent-clr:var(--purple)"><div class="scard-val" id="v-house">₹0</div><div class="scard-lbl">House Tax</div></div>
+        <div class="scard" style="--accent-clr:var(--teal)"><div class="scard-val" id="v-corp">₹0</div><div class="scard-lbl">Corporate Tax</div></div>
+      </div>
+      <div class="stat-grid">
+        <div class="scard" style="--accent-clr:var(--pink)"><div class="scard-val" id="v-cap">₹0</div><div class="scard-lbl">Capital Gains</div></div>
+        <div class="scard" style="--accent-clr:var(--blue)"><div class="scard-val" id="v-veh">₹0</div><div class="scard-lbl">Vehicle Tax</div></div>
+        <div class="scard" style="--accent-clr:var(--red)"><div class="scard-val" id="v-cust">₹0</div><div class="scard-lbl">Customs Duty</div></div>
+        <div class="scard" style="--accent-clr:var(--gold2)"><div class="scard-val" id="v-other">₹0</div><div class="scard-lbl">Prof+Stamp+Agri</div></div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+        <div class="gcard">
+          <div class="gcard-head"><div class="gcard-title">State-wise SGST / State Tax</div></div>
+          <div class="gcard-body" id="vault-state"><div class="empty" style="padding:20px">No data</div></div>
+        </div>
+        <div class="gcard">
+          <div class="gcard-head"><div class="gcard-title">Taxpayer Leaderboard</div></div>
+          <div style="overflow-x:auto" id="vault-leader"><div class="empty" style="padding:20px">No data</div></div>
+        </div>
+      </div>
+      <div class="gcard" style="margin-top:16px">
+        <div class="gcard-head">
+          <div class="gcard-title">Full Tax Registry</div>
+          <button class="btn-dl" onclick="exportCSV()">↓ Export CSV</button>
+        </div>
+        <div style="overflow-x:auto" id="vault-registry"><div class="empty">No data</div></div>
+      </div>
+    </div>
+
+    <!-- VERIFY PAGE -->
+    <div class="page" id="page-verify">
+      <div id="verify-result"><div class="empty">Mine blocks first to verify chain integrity.</div></div>
+      <div id="verify-extra" style="display:none">
+        <div class="gcard">
+          <div class="gcard-head"><div class="gcard-title">Tamper Simulation — Blockchain Immutability Demo</div></div>
+          <div class="gcard-body">
+            <div style="font-family:var(--mono);font-size:10px;color:var(--muted);margin-bottom:14px;line-height:1.8">
+              Simulate data manipulation on any block below. GovTaxChain will instantly detect the SHA-256 hash mismatch — proving that no tax record can be altered without detection.
+            </div>
+            <div id="tamper-list"></div>
+            <button class="btn-restore" onclick="resetTamper()">↺ Restore Original Chain</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- AI AUDIT PAGE -->
+    <div class="page" id="page-audit">
+      <div class="gcard" style="margin-bottom:16px">
+        <div class="gcard-head"><div class="gcard-title">AI Tax Auditor — Powered by Claude</div></div>
+        <div class="gcard-body">
+          <div class="ai-wrap">
+            <input id="ai-input" placeholder="e.g. Identify tax evasion patterns, forecast revenue, check TDS compliance, summarize state-wise income tax..."/>
+            <button class="btn-ai" onclick="runAudit()">AUDIT →</button>
+          </div>
+          <div class="qbtns">
+            <button class="qbtn" onclick="qa('Identify any anomalies, tax evasion patterns, or incorrectly applied slabs across all sectors')">Anomaly Detection</button>
+            <button class="qbtn" onclick="qa('Who are the top 3 taxpayers by total tax paid? Rank them with amounts and sectors')">Top Taxpayers</button>
+            <button class="qbtn" onclick="qa('Generate a formal Government Revenue Report with sector-wise breakdown, state collection, and YoY forecast')">Govt Revenue Report</button>
+            <button class="qbtn" onclick="qa('Analyze income tax filings for HRA compliance and 80C deduction legitimacy')">HRA & 80C Audit</button>
+            <button class="qbtn" onclick="qa('Summarize capital gains transactions and check if correct STCG/LTCG rates were applied')">Capital Gains Review</button>
+            <button class="qbtn" onclick="qa('Explain how blockchain prevents tax fraud and cheating in this GovTaxChain system')">Fraud Prevention</button>
+            <button class="qbtn" onclick="qa('Check GST chain continuity — identify any input tax credit mismatches or IGST routing issues')">GST ITC Audit</button>
+          </div>
+        </div>
+      </div>
+      <div class="gcard">
+        <div class="gcard-head"><div class="gcard-title">Audit Report</div></div>
+        <div class="gcard-body">
+          <div class="ai-output" id="ai-output"><span class="ai-placeholder">Run an audit query above to generate AI-powered analysis of the tax blockchain...</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- CERTIFICATES PAGE -->
+    <div class="page" id="page-certs">
+      <div class="gcard" style="margin-bottom:16px">
+        <div class="gcard-head"><div class="gcard-title">Generate Tax Certificates</div></div>
+        <div class="gcard-body">
+          <div class="frow">
+            <div class="fgroup" style="margin-bottom:0">
+              <label class="flabel">Select Taxpayer (by Block)</label>
+              <select class="fselect" id="cert-block"></select>
+            </div>
+            <div class="fgroup" style="margin-bottom:0">
+              <label class="flabel">Certificate Type</label>
+              <select class="fselect" id="cert-type">
+                <option value="form16">Form 16 — TDS Certificate</option>
+                <option value="clearance">Tax Clearance Certificate</option>
+                <option value="gst">GST Compliance Certificate</option>
+                <option value="property">House Property Tax Receipt</option>
+                <option value="itr">ITR Acknowledgement</option>
+              </select>
+            </div>
+          </div>
+          <div style="margin-top:14px;display:flex;gap:10px">
+            <button class="btn-dl" onclick="generateCert()">Generate Certificate</button>
+            <button class="btn-sm" onclick="downloadCert()">↓ Download .txt</button>
+          </div>
+        </div>
+      </div>
+      <div class="gcard">
+        <div class="gcard-head"><div class="gcard-title">Certificate Preview</div></div>
+        <div class="gcard-body">
+          <div class="cert-wrap" id="cert-preview">Select a taxpayer and certificate type above, then click Generate.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ROLES PAGE (Admin only) -->
+    <div class="page" id="page-roles">
+      <div class="gcard" style="margin-bottom:16px">
+        <div class="gcard-head"><div class="gcard-title">Current Role Assignments</div></div>
+        <div class="gcard-body">
+          <div style="font-family:var(--mono);font-size:10px;color:var(--muted);margin-bottom:12px;line-height:1.8">
+            Roles live on-chain in the TaxBillingSystem smart contract. This account (Admin) is the only one that can assign or remove Tax Officer / Auditor roles — the contract itself rejects any attempt from a non-admin address.
+          </div>
+          <div id="roles-list"><div class="empty">Loading role assignments…</div></div>
+        </div>
+      </div>
+      <div class="gcard">
+        <div class="gcard-head"><div class="gcard-title">Assign / Remove Role</div></div>
+        <div class="gcard-body">
+          <div class="frow">
+            <div class="fgroup" style="margin-bottom:0">
+              <label class="flabel">Account</label>
+              <select class="fselect" id="role-target-select"></select>
+            </div>
+            <div class="fgroup" style="margin-bottom:0">
+              <label class="flabel">Action</label>
+              <select class="fselect" id="role-action-select">
+                <option value="officer">Assign Tax Officer</option>
+                <option value="auditor">Assign Auditor</option>
+                <option value="remove">Remove Role</option>
+              </select>
+            </div>
+          </div>
+          <div style="margin-top:14px">
+            <button class="btn-dl" onclick="submitRoleChange()">Apply on Blockchain</button>
+          </div>
+          <div id="roles-msg" style="font-family:var(--mono);font-size:10px;margin-top:12px"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAX SUMMARY PAGE: multi-source income, TDS / GST / advance tax -->
+    <div class="page" id="page-summary">
+      <div class="stat-grid" id="ledger-stats" style="grid-template-columns:repeat(5,1fr)">
+        <div class="scard"><div class="scard-val" id="ls-income">-</div><div class="scard-lbl">Income entries</div></div>
+        <div class="scard"><div class="scard-val" id="ls-gross">-</div><div class="scard-lbl">Gross income filed</div></div>
+        <div class="scard"><div class="scard-val" id="ls-tds">-</div><div class="scard-lbl">TDS (credit)</div></div>
+        <div class="scard"><div class="scard-val" id="ls-adv">-</div><div class="scard-lbl">Advance tax (credit)</div></div>
+        <div class="scard" style="--accent-clr:var(--muted)"><div class="scard-val" id="ls-gst">-</div><div class="scard-lbl">GST (separate)</div></div>
+      </div>
+
+      <div class="gcard" id="filing-card">
+        <div class="gcard-head"><div class="gcard-title">File Income &amp; Tax Entries (Deductor)</div></div>
+        <div class="gcard-body">
+          <div style="font-family:var(--mono);font-size:10px;color:var(--muted);margin-bottom:14px;line-height:1.8">
+            Each employer / university files what it paid and what it deducted. The PAN is hashed before it goes on-chain. Entries are permanent: to fix a mistake, void the entry with a reason and file the corrected one.
+          </div>
+
+          <div class="flabel" style="color:var(--gold);margin-bottom:8px">1 · Income entry</div>
+          <div class="frow">
+            <div><label class="flabel">PAN</label><input class="finput" id="ie-pan" maxlength="10" placeholder="ABCDE1234F"/></div>
+            <div><label class="flabel">Financial year</label>
+              <select class="fselect" id="ie-fy"><option>2025-26</option><option>2026-27</option></select></div>
+          </div>
+          <div class="frow">
+            <div><label class="flabel">Income type</label>
+              <select class="fselect" id="ie-type">
+                <option value="Salary">Salary</option>
+                <option value="ProfessionalFees">Professional fees</option>
+                <option value="Other">Other</option>
+              </select></div>
+            <div><label class="flabel">Gross amount (₹)</label><input class="finput" id="ie-amt" type="number" min="0" step="0.01" placeholder="900000"/></div>
+          </div>
+          <div class="frow">
+            <div><label class="flabel">Payer name</label><input class="finput" id="ie-payer" placeholder="e.g. ABC Engineering College"/></div>
+            <div><label class="flabel">Payer TAN (optional)</label><input class="finput" id="ie-tan" maxlength="10" placeholder="BLRA12345B"/></div>
+          </div>
+          <button class="btn-dl" onclick="submitIncomeEntry()">File income entry</button>
+          <div id="ie-msg" style="font-family:var(--mono);font-size:10px;margin:10px 0 18px"></div>
+
+          <div class="flabel" style="color:var(--gold);margin-bottom:8px">2 · Tax payment (TDS / GST / advance tax)</div>
+          <div class="frow">
+            <div><label class="flabel">PAN</label><input class="finput" id="tp-pan" maxlength="10" placeholder="ABCDE1234F"/></div>
+            <div><label class="flabel">Financial year</label>
+              <select class="fselect" id="tp-fy"><option>2025-26</option><option>2026-27</option></select></div>
+          </div>
+          <div class="frow">
+            <div><label class="flabel">Type</label>
+              <select class="fselect" id="tp-type">
+                <option value="TDS">TDS (income-tax credit)</option>
+                <option value="GST">GST (tracked separately)</option>
+                <option value="AdvanceTax">Advance tax (income-tax credit)</option>
+              </select></div>
+            <div><label class="flabel">Amount (₹)</label><input class="finput" id="tp-amt" type="number" min="0" step="0.01" placeholder="40000"/></div>
+          </div>
+          <div class="fgroup"><label class="flabel">Related income entry ID (required for TDS)</label>
+            <input class="finput" id="tp-rel" type="number" min="0" placeholder="e.g. 1"/></div>
+          <button class="btn-dl" onclick="submitTaxPayment()">File tax payment</button>
+          <div id="tp-msg" style="font-family:var(--mono);font-size:10px;margin:10px 0 18px"></div>
+
+          <div class="flabel" style="color:var(--gold);margin-bottom:8px">3 · Void a wrong entry</div>
+          <div class="frow">
+            <div><label class="flabel">Entry kind</label>
+              <select class="fselect" id="vd-kind"><option value="income-entry">Income entry</option><option value="tax-payment">Tax payment</option></select></div>
+            <div><label class="flabel">Entry ID</label><input class="finput" id="vd-id" type="number" min="1" placeholder="1"/></div>
+          </div>
+          <div class="fgroup"><label class="flabel">Reason (stored on-chain)</label><input class="finput" id="vd-reason" placeholder="e.g. Wrong amount entered"/></div>
+          <button class="btn-dl" onclick="submitVoid()">Void entry</button>
+          <div id="vd-msg" style="font-family:var(--mono);font-size:10px;margin-top:10px"></div>
+        </div>
+      </div>
+
+      <div class="gcard">
+        <div class="gcard-head"><div class="gcard-title">My Tax Summary</div></div>
+        <div class="gcard-body">
+          <div class="frow" style="grid-template-columns:1fr 1fr 1fr">
+            <div><label class="flabel">PAN</label><input class="finput" id="sm-pan" maxlength="10" placeholder="ABCDE1234F"/></div>
+            <div><label class="flabel">Financial year</label>
+              <select class="fselect" id="sm-fy"><option>2025-26</option><option>2026-27</option></select></div>
+            <div><label class="flabel">Chapter VI-A deductions ₹ (old regime)</label><input class="finput" id="sm-ded" type="number" min="0" placeholder="150000"/></div>
+          </div>
+          <button class="btn-dl" onclick="loadSummary()">Calculate summary</button>
+          <div id="sm-msg" style="font-family:var(--mono);font-size:10px;margin-top:10px"></div>
+          <div id="sm-result" style="margin-top:16px"></div>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<script>
+// ==================== BLOCKCHAIN ENGINE ====================
+const sha256 = async str => {
+  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(str));
+  return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join('');
+};
+const INR = v => '₹' + Number(v).toLocaleString('en-IN',{maximumFractionDigits:2});
+const N   = v => Number(v).toLocaleString('en-IN',{maximumFractionDigits:2});
+const pct = (a,b) => b>0 ? ((a/b)*100).toFixed(1)+'%' : '0%';
+
+let chain = [];
+let tampered = {};
+let openBlocks = {};
+let currentSector = 'income';
+let currentTaxCalc = {};
+let lastCertText = '';
+
+// ==================== ROLES (Admin / Tax Officer / Auditor) ====================
+// The smart contract already enforces these roles on-chain (onlyAdmin /
+// onlyTaxOfficer / onlyAuditor). Login is now password-protected against
+// the backend (see /login in server.js) — the frontend role selector is
+// no longer trusted on its own.
+const BACKEND_URL = 'http://localhost:5000';
+let currentRole = null; // 'admin' | 'officer' | 'auditor'
+let authToken = null;   // session token returned by POST /login
+let demoAccounts = null; // { admin, officer, auditor }
+
+const ROLE_LABELS_UI = {
+  admin: '🛡️ Admin',
+  officer: '🧾 Tax Officer',
+  auditor: '🔎 Auditor'
+};
+
+async function attemptLogin(){
+  const role = document.getElementById('login-role').value;
+  const password = document.getElementById('login-password').value;
+  const errEl = document.getElementById('login-error');
+  errEl.textContent = '';
+
+  if(!password){
+    errEl.textContent = 'Enter a password.';
+    return;
+  }
+
+  try{
+    const res = await fetch(BACKEND_URL + '/login', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({ role, password })
+    });
+    const data = await res.json();
+
+    if(!data.success){
+      errEl.textContent = data.message || 'Login failed.';
+      return;
+    }
+
+    currentRole = data.role;
+    authToken = data.token;
+
+    try{
+      localStorage.setItem('gtc_role', currentRole);
+      localStorage.setItem('gtc_token', authToken);
+    }catch(e){}
+
+    document.getElementById('login-password').value = '';
+    document.getElementById('login-overlay').style.display = 'none';
+    applyRoleUI();
+
+  }catch(e){
+    errEl.textContent = 'Could not reach the backend — is the server running?';
+  }
+}
+
+function logout(){
+  currentRole = null;
+  authToken = null;
+  try{
+    localStorage.removeItem('gtc_role');
+    localStorage.removeItem('gtc_token');
+  }catch(e){}
+  document.getElementById('role-badge').style.display = 'none';
+  document.getElementById('login-overlay').style.display = 'flex';
+}
+
+// Wraps fetch() to attach the session token and handle expired/invalid
+// sessions by bouncing the user back to the login screen.
+async function authFetch(url, options = {}){
+  options.headers = Object.assign(
+    {},
+    options.headers,
+    authToken ? { 'Authorization': 'Bearer ' + authToken } : {}
+  );
+
+  const res = await fetch(url, options);
+
+  if(res.status === 401){
+    logout();
+    throw new Error('Session expired — please log in again.');
+  }
+
+  return res;
+}
+
+function applyRoleUI(){
+  const badge = document.getElementById('role-badge');
+  const badgeText = document.getElementById('role-badge-text');
+  badge.style.display = 'flex';
+  badgeText.textContent = ROLE_LABELS_UI[currentRole] || currentRole;
+
+  // Auditor: view & verify only — no "file tax transaction" form
+  const sidebar = document.getElementById('sidebar-form');
+  const auditorOnly = currentRole === 'auditor';
+  sidebar.classList.toggle('role-hidden', auditorOnly);
+  const filingCard = document.getElementById('filing-card');
+  if(filingCard) filingCard.classList.toggle('role-hidden', auditorOnly);
+
+  // Roles management panel: Admin only
+  const isAdmin = currentRole === 'admin';
+  document.getElementById('nav-roles-btn').classList.toggle('role-hidden', !isAdmin);
+  document.getElementById('ctab-roles').classList.toggle('role-hidden', !isAdmin);
+  document.getElementById('nav-roles-sep').style.display = isAdmin ? 'block' : 'none';
+}
+
+const SECTOR_COLORS = {
+  income:'#00d4ff',house:'#a55eea',gst:'#f5a623',corporate:'#00b894',
+  capital:'#ff6b9d',vehicle:'#4a90d9',customs:'#ff4757',
+  professional:'#ffd166',stamp:'#7eddff',agriculture:'#7affd6'
+};
+const SECTOR_LABELS = {
+  income:'Income Tax',house:'House Tax',gst:'GST',corporate:'Corporate Tax',
+  capital:'Capital Gains',vehicle:'Vehicle Tax',customs:'Customs Duty',
+  professional:'Professional Tax',stamp:'Stamp Duty',agriculture:'Agriculture'
+};
+
+// ===== LOAD / SAVE / BLOCKCHAIN SYNC =====
+
+function save(){
+  try{
+    localStorage.setItem('govtaxchain_v1', JSON.stringify(chain));
+  }catch(e){}
+}
+
+async function syncFromBackend(){
+
+  try{
+
+    const response = await authFetch("http://localhost:5000/records");
+
+    const result = await response.json();
+
+    if(!result.success){
+      throw new Error(result.message || "Failed to load blockchain records");
+    }
+
+    const records = result.records || [];
+
+    chain = [];
+
+    for(let i = 0; i < records.length; i++){
+
+      const r = records[i];
+
+      const index = i;
+
+      const timestamp =
+        new Date(Number(r.timestamp) * 1000).toISOString();
+
+      const totalTax = Number(r.taxAmount);
+
+      const data = {
+
+        txid: r.transactionHash || "BLOCKCHAIN-" + r.id,
+
+        inv:
+          "INC-" +
+          String(r.id).padStart(5, "0"),
+
+        name: r.taxpayerName,
+
+        pan: r.panNumber,
+
+        ay: "AY 2025-26",
+
+        state: r.state,
+
+        sector: "income",
+
+        sectorLabel: r.productName || "Income Tax",
+
+        taxCalc: {
+          type: "income",
+          total: totalTax
+        },
+
+        totalTax: totalTax,
+
+        timestamp: timestamp,
+
+        fy: "2025-26",
+
+        productName: r.productName,
+
+        productAmount: Number(r.productAmount),
+
+        blockchainId: Number(r.id),
+
+        blockchainTxHash: r.transactionHash || null
+
+      };
+
+      const prevHash =
+        chain.length
+          ? chain[chain.length - 1].hash
+          : "0".repeat(64);
+
+      let nonce = 0;
+      let hash = "";
+
+      const payload = JSON.stringify({
+        index,
+        prevHash,
+        data
+      });
+
+      while(!hash.startsWith("00")){
+
+        nonce++;
+
+        hash = await sha256(
+          payload + nonce
+        );
+
+      }
+
+      chain.push({
+
+        index,
+
+        prevHash,
+
+        data,
+
+        hash,
+
+        nonce,
+
+        minedAt: timestamp
+
+      });
+
+    }
+
+    save();
+
+    tampered = {};
+
+    updateAll();
+
+    console.log(
+      "Blockchain records loaded:",
+      chain.length
+    );
+
+  }catch(error){
+
+    console.error(
+      "Blockchain sync failed:",
+      error
+    );
+
+    alert(
+      "Unable to load blockchain records. Make sure Hardhat and backend are running."
+    );
+
+  }
+
+}
+
+async function load(){
+
+  await syncFromBackend();
+
+}
+
+// ==================== TAX CALCULATORS ====================
+
+// Toggle which Income Tax fields are visible based on Employment Type
+// and (for Self-Employed) the chosen computation method.
+function updateEmploymentUI(){
+  const emptype = document.getElementById('it-emptype').value;
+  const isSE = emptype === 'Self-Employed';
+  const method = document.getElementById('it-compmethod').value;
+  const isPresumptive = method === 'presumptive';
+  const profType = document.getElementById('it-proftype').value;
+
+  document.getElementById('it-salary-label').textContent =
+    isSE ? 'Gross Receipts / Turnover (₹/yr)' : 'Gross Salary (₹/yr)';
+
+  document.getElementById('it-hra-group').style.display = isSE ? 'none' : '';
+  document.getElementById('it-rent-group').style.display = isSE ? 'none' : '';
+  document.getElementById('it-compmethod-group').style.display = isSE ? '' : 'none';
+  document.getElementById('it-proftype-group').style.display = (isSE && isPresumptive) ? '' : 'none';
+  document.getElementById('it-txnmode-group').style.display = (isSE && isPresumptive && profType==='44ad') ? '' : 'none';
+  document.getElementById('it-bizexp-group').style.display = (isSE && !isPresumptive) ? '' : 'none';
+}
+
+// INCOME TAX (New Regime 2025-26 onward + Old)
+function calcIncome(){
+  const sal      = +document.getElementById('it-salary').value||0; // salary, or gross receipts/turnover if self-employed
+  const hra      = +document.getElementById('it-hra').value||0;
+  const rent     = +document.getElementById('it-rent').value||0;
+  const d80c     = Math.min(+document.getElementById('it-80c').value||0, 150000);
+  const d80d     = Math.min(+document.getElementById('it-80d').value||0, 25000);
+  const nps      = Math.min(+document.getElementById('it-nps').value||0, 50000);
+  const other    = +document.getElementById('it-other').value||0;
+  const regime   = document.getElementById('it-regime').value;
+  const emptype  = document.getElementById('it-emptype').value;
+  const isSE     = emptype === 'Self-Employed';
+
+  let rows = [];
+
+  // ---- Work out income from salary vs. business/profession (Sec 16(ia) ----
+  // only applies to salary/pension income — self-employed taxpayers under
+  // PGBP are not eligible for the flat standard deduction) ----
+  let workIncome = sal;
+
+  if(isSE){
+    const method = document.getElementById('it-compmethod').value;
+
+    if(method === 'presumptive'){
+      const profType = document.getElementById('it-proftype').value;
+      if(profType === '44ada'){
+        workIncome = sal * 0.5;
+        rows.push(['Gross Receipts', INR(sal),'var(--white)']);
+        rows.push(['Presumptive Profit (44ADA \u2014 50%)', INR(workIncome),'var(--white)']);
+      } else {
+        const txnMode = document.getElementById('it-txnmode').value;
+        const rate = txnMode === 'digital' ? 0.06 : 0.08;
+        workIncome = sal * rate;
+        rows.push(['Gross Turnover', INR(sal),'var(--white)']);
+        rows.push(['Presumptive Profit (44AD \u2014 '+(rate*100)+'%)', INR(workIncome),'var(--white)']);
+      }
+    } else {
+      const expenses = +document.getElementById('it-bizexp').value||0;
+      workIncome = Math.max(0, sal - expenses);
+      rows.push(['Gross Receipts', INR(sal),'var(--white)']);
+      rows.push(['Business Expenses', '-'+INR(expenses),'var(--red)']);
+      rows.push(['Net Business Profit', INR(workIncome),'var(--white)']);
+    }
+  }
+
+  const gross  = workIncome + other;
+
+  let taxable, std_ded, hra_exempt=0;
+
+  if(regime==='new'){
+    // Self-employed (PGBP income) isn't eligible for the Sec 16(ia)
+    // standard deduction — that applies only to salary/pension income.
+    std_ded = isSE ? 0 : Math.min(75000, gross);
+    taxable = Math.max(0, gross - std_ded);
+    rows.push(['Gross Income', INR(gross),'var(--white)']);
+    if(!isSE) rows.push(['Std. Deduction (New)', INR(std_ded),'var(--red)']);
+    rows.push(['Taxable Income', INR(taxable),'var(--gold)']);
+  } else {
+    // HRA exemption and the salary-based standard deduction don't apply
+    // to self-employed taxpayers either; 80C/80D/NPS are personal
+    // deductions and still apply to anyone under the old regime.
+    hra_exempt = isSE ? 0 : Math.max(0, Math.min(hra, rent - sal*0.1, sal*0.5));
+    std_ded = isSE ? 0 : Math.min(50000, sal);
+    const total_ded = std_ded + Math.min(d80c,150000) + d80d + nps + hra_exempt;
+    taxable = Math.max(0, gross - total_ded);
+    rows.push(['Gross Income', INR(gross),'var(--white)']);
+    if(!isSE){
+      rows.push(['HRA Exempt', INR(hra_exempt),'var(--red)']);
+      rows.push(['Std. Deduction', INR(std_ded),'var(--red)']);
+    }
+    rows.push(['80C/80D/NPS', INR(Math.min(d80c,150000)+d80d+nps),'var(--red)']);
+    rows.push(['Net Taxable', INR(taxable),'var(--gold)']);
+  }
+
+  let tax = 0;
+  if(regime==='new'){
+    // FY 2025-26 onward slabs (Budget 2025)
+    const slabs = [[400000,0],[400000,.05],[400000,.1],[400000,.15],[400000,.2],[400000,.25],[Infinity,.3]];
+    let rem = taxable, lim=0;
+    for(const [s,r] of slabs){const chunk=Math.min(rem,s);tax+=chunk*r;rem-=chunk;if(rem<=0)break;lim+=s;}
+    // Rebate u/s 87A (FY 2025-26): taxable income up to ₹12L is fully
+    // rebated (max rebate ₹60,000, which exactly covers tax at ₹12L).
+    // Just above ₹12L, marginal relief caps tax at the amount by which
+    // taxable income exceeds ₹12L, so there's no sudden cliff-edge jump.
+    if(taxable<=1200000){
+      tax = 0;
+    } else {
+      const excess = taxable - 1200000;
+      tax = Math.min(tax, excess);
+    }
+  } else {
+    const slabs = [[250000,0],[250000,.05],[500000,.2],[Infinity,.3]];
+    let rem = taxable;
+    for(const [s,r] of slabs){const chunk=Math.min(rem,s);tax+=chunk*r;rem-=chunk;if(rem<=0)break;}
+    if(taxable<=500000) tax=0;
+  }
+
+  const surcharge = taxable>5000000 ? (taxable>10000000 ? tax*.15 : tax*.1) : 0;
+  const cess = (tax+surcharge)*0.04;
+  const tds = tax+surcharge+cess;
+  rows.push(['Income Tax', INR(tax),'var(--cyan)']);
+  if(surcharge>0) rows.push(['Surcharge', INR(surcharge),'var(--red)']);
+  rows.push(['Health & Edu Cess (4%)', INR(cess),'var(--red)']);
+  rows.push(['Total Tax (TDS)', INR(tds),'var(--gold2)']);
+
+  setPreview(rows, tds, 'INCOME TAX — '+regime.toUpperCase()+' REGIME');
+  currentTaxCalc = {type:'income',taxable,tax,surcharge,cess,tds,gross,hra_exempt,regime, effectiveRate:(tds/Math.max(gross,1)*100).toFixed(2)+'%'};
+}
+
+// HOUSE TAX
+function calcHouse(){
+  const type = document.getElementById('ht-type').value;
+  const val  = +document.getElementById('ht-value').value||0;
+  const area = +document.getElementById('ht-area').value||0;
+  const rent = +document.getElementById('ht-rent').value||0;
+  const mun  = +document.getElementById('ht-mun').value||0;
+  const loan = +document.getElementById('ht-loan').value||0;
+  const zone = document.getElementById('ht-zone').value;
+  const rows = [];
+
+  const zoneRate = {A:.02,B:.015,C:.01,D:.007}[zone];
+  const annualValue = type==='letout'||type==='vacant' ? Math.max(rent, val*zoneRate) : 0;
+  const netAnnualValue = Math.max(0, annualValue - mun);
+  const stdDed = type==='letout'||type==='vacant' ? netAnnualValue*0.3 : 0;
+  const loanDed = type==='selfoccupied' ? Math.min(loan,200000) : Math.min(loan,200000);
+  const incomeFromHouse = type==='selfoccupied' ? -Math.min(loan,200000) : netAnnualValue - stdDed - loanDed;
+
+  // Municipal tax (local body)
+  const munTaxRate = {A:0.002,B:0.0015,C:0.001,D:0.0008}[zone];
+  const munTaxAnnual = val * munTaxRate;
+
+  // Property tax (state)
+  const propTaxRate = type==='commercial' ? 0.003 : 0.0015;
+  const propTax = val * propTaxRate + (area * (zone==='A'?8:zone==='B'?5:zone==='C'?3:1.5));
+
+  rows.push(['Property Value', INR(val),'var(--white)']);
+  rows.push(['Annual Value (GAV)', INR(annualValue),'var(--white)']);
+  rows.push(['Municipal Tax Paid', '-'+INR(mun),'var(--red)']);
+  rows.push(['Net Annual Value', INR(netAnnualValue),'var(--gold)']);
+  if(stdDed>0) rows.push(['Std Deduction (30%)', '-'+INR(stdDed),'var(--red)']);
+  if(loanDed>0) rows.push(['Home Loan Interest', '-'+INR(loanDed),'var(--red)']);
+  rows.push(['Municipal Body Tax', INR(munTaxAnnual),'var(--purple)']);
+  rows.push(['State Property Tax', INR(propTax),'var(--purple)']);
+
+  const totalHouseTax = Math.max(0, munTaxAnnual + propTax + (incomeFromHouse>0 ? incomeFromHouse*0.3 : 0));
+  rows.push(['Total House Tax', INR(totalHouseTax),'var(--gold2)']);
+
+  setPreview(rows, totalHouseTax, 'HOUSE / PROPERTY TAX');
+  currentTaxCalc = {type:'house',propType:type,propertyValue:val,annualValue,netAnnualValue,munTaxAnnual,propTax,loanDed,stdDed,totalHouseTax,zone};
+}
+
+// GST
+function calcGST(){
+  const amt    = +document.getElementById('gst-amount').value||0;
+  const rate   = +document.getElementById('gst-rate').value||0;
+  const txtype = document.getElementById('gst-txtype').value;
+  const rcm    = document.getElementById('gst-rcm').value;
+  const rows   = [];
+
+  const gst = amt * rate / 100;
+  let cgst=0,sgst=0,igst=0;
+  if(txtype==='intrastate'){cgst=gst/2;sgst=gst/2;}
+  else if(txtype==='interstate'){igst=gst;}
+  else{igst=0;} // export / SEZ
+
+  const cess = rate===28 ? amt*0.015 : 0; // compensation cess on 28% slab
+  const total = amt + gst + cess;
+
+  rows.push(['Invoice / Taxable Value', INR(amt),'var(--white)']);
+  if(txtype==='intrastate'){
+    rows.push(['CGST ('+rate/2+'%)', INR(cgst),'var(--cyan)']);
+    rows.push(['SGST ('+rate/2+'%)', INR(sgst),'var(--gold)']);
+  } else if(txtype==='interstate'){
+    rows.push(['IGST ('+rate+'%)', INR(igst),'var(--purple)']);
+  } else {
+    rows.push(['GST (Zero-rated / Export)', INR(0),'var(--teal)']);
+  }
+  if(cess>0) rows.push(['Compensation Cess', INR(cess),'var(--red)']);
+  if(rcm==='yes') rows.push(['RCM — Reverse Charge','Applicable','var(--pink)']);
+  rows.push(['Total Invoice Value', INR(total),'var(--gold2)']);
+
+  setPreview(rows, gst+cess, 'GST — '+txtype.toUpperCase());
+  currentTaxCalc = {type:'gst',amount:amt,gstRate:rate,cgst,sgst,igst,cess,txtype,total,totalGST:gst+cess};
+}
+
+// CORPORATE TAX
+function calcCorporate(){
+  const ctype   = document.getElementById('ct-type').value;
+  const turnover= +document.getElementById('ct-turnover').value||0;
+  const profit  = +document.getElementById('ct-profit').value||0;
+  const mat     = +document.getElementById('ct-mat').value||0;
+  const div     = +document.getElementById('ct-div').value||0;
+
+  const rates={domestic:{base:.22,sur:turnover>100e6?.1:.07,cess:.04},
+    startup:{base:.15,sur:0,cess:.04},msme:{base:.25,sur:turnover>100e6?.07:0,cess:.04},
+    foreign:{base:.40,sur:profit>10e6?.05:0,cess:.04},llp:{base:.30,sur:0,cess:.04}};
+  const r = rates[ctype]||rates.domestic;
+  const corptax  = profit * r.base;
+  const surcharge= corptax * r.sur;
+  const cess     = (corptax+surcharge) * r.cess;
+  const matTax   = mat * 0.15 * 1.04;
+  const finalTax = Math.max(corptax+surcharge+cess, matTax);
+  const ddt      = div * 0.10 * 1.12; // TDS on dividend 10% + cess
+
+  const rows=[
+    ['Turnover',INR(turnover),'var(--white)'],
+    ['Profit Before Tax (PBT)',INR(profit),'var(--white)'],
+    ['Corporate Tax @ '+(r.base*100)+'%',INR(corptax),'var(--teal)'],
+    ['Surcharge',INR(surcharge),'var(--red)'],
+    ['Health & Edu Cess',INR(cess),'var(--red)'],
+    ['MAT (15% of Book Profit)',INR(matTax),'var(--gold2)'],
+    ['Final Tax (Higher of above)',INR(finalTax),'var(--gold2)'],
+  ];
+  if(div>0) rows.push(['TDS on Dividend',INR(ddt),'var(--pink)']);
+
+  setPreview(rows, finalTax+ddt, 'CORPORATE TAX');
+  currentTaxCalc = {type:'corporate',turnover,profit,corptax,surcharge,cess,matTax,finalTax,ddt,totalTax:finalTax+ddt};
+}
+
+// CAPITAL GAINS
+function calcCapital(){
+  const asset = document.getElementById('cg-asset').value;
+  const buy   = +document.getElementById('cg-buy').value||0;
+  const sell  = +document.getElementById('cg-sell').value||0;
+  const hold  = document.getElementById('cg-hold').value;
+  const index = +document.getElementById('cg-index').value||0;
+  const exempt= +document.getElementById('cg-exempt').value||0;
+
+  const cost = index>0 ? index : buy;
+  let gain = Math.max(0, sell - cost - exempt);
+  let taxRate=0, type='', rows=[];
+
+  if(asset==='crypto'){taxRate=.30; type='VDA Flat 30%';}
+  else if(asset==='equity'){
+    if(hold==='stcg'){taxRate=.20; type='STCG @ 20% (post Jul 2024)';}
+    else{taxRate=.125; gain=Math.max(0,gain-125000); type='LTCG @ 12.5% (>₹1.25L exempt)';}
+  } else if(asset==='property'){
+    if(hold==='stcg'){taxRate=.30; type='STCG — as per income slab';}
+    else{taxRate=.125; type='LTCG @ 12.5%';}
+  } else if(asset==='debt'){
+    taxRate = hold==='stcg' ? .30 : .20; type='Debt '+hold.toUpperCase();
+  } else {
+    taxRate = hold==='stcg' ? .30 : .20; type=hold.toUpperCase()+' Gains';
+  }
+
+  const cgTax = gain * taxRate;
+  const surcharge = gain>5000000 ? cgTax*.15 : 0;
+  const cess = (cgTax+surcharge)*0.04;
+  const total = cgTax+surcharge+cess;
+
+  rows=[
+    ['Purchase Cost / COA', INR(buy),'var(--white)'],
+    ['Indexed Cost (CII)', INR(cost),'var(--white)'],
+    ['Sale Consideration', INR(sell),'var(--white)'],
+    ['Exemption (54/54EC)', INR(exempt),'var(--red)'],
+    ['Taxable Capital Gain', INR(gain),'var(--gold)'],
+    ['Tax Rate', (taxRate*100)+'% — '+type,'var(--pink)'],
+    ['Capital Gains Tax', INR(cgTax),'var(--pink)'],
+    ['Surcharge', INR(surcharge),'var(--red)'],
+    ['Cess (4%)', INR(cess),'var(--red)'],
+    ['Total Tax', INR(total),'var(--gold2)'],
+  ];
+  setPreview(rows, total, 'CAPITAL GAINS TAX');
+  currentTaxCalc = {type:'capital',asset,buy,sell,gain,cgTax,surcharge,cess,total,hold,taxRate};
+}
+
+// VEHICLE TAX
+function calcVehicle(){
+  const vtype = document.getElementById('vt-type').value;
+  const cost  = +document.getElementById('vt-cost').value||0;
+  const state = document.getElementById('f-state').value;
+
+  const roadTaxRates = {
+    '2w_petrol':.06,'2w_ev':.02,'4w_petrol':.10,'4w_diesel':.14,
+    '4w_ev':.04,'4w_luxury':.18,'commercial_light':.08,'commercial_heavy':.12
+  };
+  const regFee = {'2w_petrol':500,'2w_ev':500,'4w_petrol':1500,'4w_diesel':1500,
+    '4w_ev':1500,'4w_luxury':5000,'commercial_light':2000,'commercial_heavy':5000};
+  const greenCess = vtype.includes('diesel') ? cost*0.02 : 0;
+  const gst_vehicle = cost*0.28; // GST on vehicle
+  const roadTax = cost * (roadTaxRates[vtype]||.10);
+  const reg = regFee[vtype]||1500;
+  const insurance = cost*0.025;
+  const hpCharge = 1500;
+  const total = roadTax + reg + greenCess + insurance*0.18; // only taxes
+
+  const rows=[
+    ['Vehicle Cost (Ex-showroom)', INR(cost),'var(--white)'],
+    ['GST on Vehicle (28%)', INR(gst_vehicle),'var(--gold)'],
+    ['Road Tax (State)', INR(roadTax),'var(--blue)'],
+    ['Registration Fee', INR(reg),'var(--blue)'],
+    ['Green Cess (Diesel)', INR(greenCess),'var(--teal)'],
+    ['Insurance GST (18%)', INR(insurance*0.18),'var(--red)'],
+    ['HP Charge', INR(hpCharge),'var(--dim)'],
+    ['Total Tax Payable', INR(total+gst_vehicle),'var(--gold2)'],
+  ];
+  setPreview(rows, total+gst_vehicle, 'VEHICLE TAX');
+  currentTaxCalc = {type:'vehicle',vtype,cost,gst_vehicle,roadTax,reg,greenCess,total:total+gst_vehicle};
+}
+
+// CUSTOMS DUTY
+function calcCustoms(){
+  const cif  = +document.getElementById('cu-cif').value||0;
+  const bcd  = +document.getElementById('cu-bcd').value||0;
+  const igst = +document.getElementById('cu-igst').value||18;
+  const cat  = document.getElementById('cu-cat').value;
+
+  const aidc = cat==='electronics' ? cif*0.02 : 0;
+  const sws  = cif*0.10; // Social Welfare Surcharge on BCD
+  const bcdAmt = cif*bcd/100;
+  const swsAmt = bcdAmt*sws/100;
+  const assessable = cif + bcdAmt + swsAmt + aidc;
+  const igstAmt = assessable * igst/100;
+  const cess = cat==='luxury' ? cif*0.04 : 0;
+  const total = bcdAmt + swsAmt + aidc + igstAmt + cess;
+
+  const rows=[
+    ['CIF Value', INR(cif),'var(--white)'],
+    ['Basic Customs Duty ('+bcd+'%)', INR(bcdAmt),'var(--red)'],
+    ['Social Welfare Surcharge (10%)', INR(swsAmt),'var(--red)'],
+    ['AIDC (Electronics)', INR(aidc),'var(--red)'],
+    ['Assessable Value', INR(assessable),'var(--gold)'],
+    ['IGST on Import ('+igst+'%)', INR(igstAmt),'var(--purple)'],
+    ['Comp. Cess (Luxury)', INR(cess),'var(--red)'],
+    ['Total Import Duty', INR(total),'var(--gold2)'],
+  ];
+  setPreview(rows, total, 'CUSTOMS / IMPORT DUTY');
+  currentTaxCalc = {type:'customs',cif,bcdAmt,swsAmt,aidc,igstAmt,cess,total};
+}
+
+// PROFESSIONAL TAX
+function calcProfessional(){
+  const sal    = +document.getElementById('pt-salary').value||0;
+  const months = Math.min(+document.getElementById('pt-months').value||12,12);
+  const state  = document.getElementById('f-state').value;
+  const annual = sal * months;
+
+  // State-wise PT slabs (simplified)
+  const stateSlabs = {
+    Karnataka:[[15000,0],[25000,200],[Infinity,200]],
+    Maharashtra:[[7500,0],[10000,175],[Infinity,200]],
+    West_Bengal:[[8500,0],[10000,90],[15000,110],[25000,130],[40000,150],[Infinity,200]],
+  };
+  const slabs = stateSlabs[state.replace(' ','_')] || [[10000,0],[15000,150],[Infinity,200]];
+  let pt=0;
+  for(const [lim,tax] of slabs){if(sal<=lim){pt=tax;break;}}
+  const annualPT = pt*12;
+
+  const rows=[
+    ['Monthly Salary', INR(sal),'var(--white)'],
+    ['Months', months,'var(--white)'],
+    ['Annual Income', INR(annual),'var(--gold)'],
+    ['Prof Tax / Month ('+state+')', INR(pt),'var(--gold2)'],
+    ['Annual Professional Tax', INR(annualPT),'var(--gold2)'],
+  ];
+  setPreview(rows, annualPT, 'PROFESSIONAL TAX ('+state.toUpperCase()+')');
+  currentTaxCalc = {type:'professional',salary:sal,months,annual,monthlyPT:pt,annualPT,state};
+}
+
+// STAMP DUTY
+function calcStamp(){
+  const type   = document.getElementById('sd-type').value;
+  const value  = +document.getElementById('sd-value').value||0;
+  const cat    = document.getElementById('sd-cat').value;
+  const gender = document.getElementById('sd-gender').value;
+
+  const stampRates={
+    sale:{res:{male:.06,female:.055,joint:.055},comm:{male:.07,female:.065,joint:.065},agri:{male:.05,female:.045,joint:.045}},
+    gift:{res:{male:.03,female:.025,joint:.025},comm:{male:.04,female:.035,joint:.035},agri:{male:.02,female:.015,joint:.015}},
+    lease:{res:{male:.02,female:.02,joint:.02},comm:{male:.025,female:.025,joint:.025},agri:{male:.015,female:.015,joint:.015}},
+    mortgage:{res:{male:.015,female:.015,joint:.015},comm:{male:.02,female:.02,joint:.02},agri:{male:.01,female:.01,joint:.01}},
+    partition:{res:{male:.04,female:.04,joint:.04},comm:{male:.05,female:.05,joint:.05},agri:{male:.03,female:.03,joint:.03}},
+  };
+  const r = stampRates[type]?.[cat]?.[gender] || .06;
+  const stampDuty = value * r;
+  const regFee = Math.min(value*.01, 30000);
+  const total = stampDuty + regFee;
+
+  const rows=[
+    ['Property Value', INR(value),'var(--white)'],
+    ['Stamp Duty ('+type+' / '+(r*100)+'%)', INR(stampDuty),'var(--purple)'],
+    ['Registration Fee (1%, max ₹30K)', INR(regFee),'var(--purple)'],
+    ['Total Stamp Duty', INR(total),'var(--gold2)'],
+  ];
+  setPreview(rows, total, 'STAMP DUTY — '+type.toUpperCase());
+  currentTaxCalc = {type:'stamp',propType:type,value,stampDuty,regFee,total,cat,gender};
+}
+
+// AGRICULTURE
+function calcAgriculture(){
+  const agri  = +document.getElementById('ag-income').value||0;
+  const other = +document.getElementById('ag-other').value||0;
+  const cess  = +document.getElementById('ag-cess').value||0;
+
+  // Partial integration method
+  const combined = agri + other;
+  const taxOnCombined = combined>250000 ? (combined<=500000?(combined-250000)*.05:(combined<=1000000?(250000*.05+(combined-500000)*.2):(250000*.05+500000*.2+(combined-1000000)*.3))) : 0;
+  const taxOnAgriOnly = agri>250000 ? (agri<=500000?(agri-250000)*.05:(agri<=1000000?(250000*.05+(agri-500000)*.2):(250000*.05+500000*.2+(agri-1000000)*.3))) : 0;
+  const netTax = Math.max(0, taxOnCombined - taxOnAgriOnly);
+  const total  = netTax + cess;
+
+  const rows=[
+    ['Agricultural Income (Exempt)', INR(agri),'var(--teal)'],
+    ['Non-Agricultural Income', INR(other),'var(--white)'],
+    ['Tax (Partial Integration)', INR(netTax),'var(--gold)'],
+    ['Land Revenue / Cess Paid', INR(cess),'var(--red)'],
+    ['Net Tax Liability', INR(total),'var(--gold2)'],
+  ];
+  setPreview(rows, total, 'AGRICULTURE — PARTIAL INTEGRATION');
+  currentTaxCalc = {type:'agriculture',agriIncome:agri,otherIncome:other,netTax,cess,total};
+}
+
+// ===== PREVIEW =====
+function setPreview(rows, total, title){
+  document.getElementById('preview-title').textContent = title;
+  document.getElementById('preview-rows').innerHTML = rows.map(([l,v,c])=>
+    `<div class="tp-row"><span>${l}</span><span style="color:${c}">${v}</span></div>`
+  ).join('');
+  document.getElementById('preview-total').textContent = INR(total);
+}
+
+// ===== SECTOR SWITCH =====
+function setSector(s, btn){
+  currentSector = s;
+  document.querySelectorAll('.stab').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  document.querySelectorAll('.form-panel').forEach(p=>p.classList.remove('active'));
+  document.getElementById('fp-'+s).classList.add('active');
+  // reset preview
+  document.getElementById('preview-title').textContent = 'LIVE TAX CALCULATION';
+  document.getElementById('preview-rows').innerHTML = '<div style="font-family:var(--mono);font-size:10px;color:var(--dim);text-align:center;padding:10px">Fill the form to see live calculation</div>';
+  document.getElementById('preview-total').textContent = '₹0';
+  currentTaxCalc = {};
+}
+
+// ===== MINE BLOCK =====
+// ===== MINE BLOCK / SEAL ON BLOCKCHAIN =====
+async function mineTaxBlock(){
+
+  if(currentRole === 'auditor'){
+    alert('Auditors have view/verify access only and cannot file tax records.');
+    return;
+  }
+
+  const name = document.getElementById('f-name').value.trim();
+  const pan = document.getElementById('f-pan').value.trim();
+  const ay = document.getElementById('f-ay').value;
+  const state = document.getElementById('f-state').value;
+
+  if(!name || !pan){
+    alert('Please fill Taxpayer Name and PAN.');
+    return;
+  }
+
+  if(!currentTaxCalc.type){
+    alert('Please fill and calculate the tax form.');
+    return;
+  }
+
+  const btn = document.getElementById('mine-btn');
+  const prog = document.getElementById('mine-progress');
+  const fill = document.getElementById('prog-fill');
+  const msg = document.getElementById('prog-msg');
+
+  btn.disabled = true;
+  prog.style.display = 'block';
+
+  try {
+
+    // Get calculated tax from frontend
+    // Round to the nearest rupee — Solidity's uint256 can't store
+    // fractional values, and the un-rounded amount (e.g. 161958.47)
+    // causes an ethers "underflow" error when sent to the contract.
+    const totalTax = Math.round(
+      parseFloat(
+        document
+          .getElementById('preview-total')
+          .textContent
+          .replace(/[₹,]/g, '')
+      ) || 0
+    );
+
+    if(totalTax <= 0){
+      alert('Please calculate a valid tax amount.');
+      return;
+    }
+
+    // Progress animation
+    const steps = [
+      'PREPARING TAX RECORD',
+      'CONNECTING TO BACKEND',
+      'SUBMITTING TO BLOCKCHAIN',
+      'WAITING FOR TRANSACTION',
+      'RECORD SEALED'
+    ];
+
+    for(let i = 0; i <= 100; i += 2){
+
+      fill.style.width = i + '%';
+
+      const stepIndex = Math.min(
+        Math.floor(i / 21),
+        steps.length - 1
+      );
+
+      msg.textContent = steps[stepIndex] + '...';
+
+      await new Promise(
+        r => setTimeout(r, 20)
+      );
+    }
+
+
+    // Send record to Node.js backend
+    const response = await authFetch(
+      BACKEND_URL + '/create-tax',
+      {
+        method: 'POST',
+
+        headers: {
+          'Content-Type': 'application/json'
+        },
+
+        body: JSON.stringify({
+
+          taxpayerName: name,
+
+          panNumber: pan,
+
+          productName:
+            SECTOR_LABELS[currentSector],
+
+          productAmount: totalTax,
+
+          taxAmount: totalTax,
+
+          state: state
+
+        })
+      }
+    );
+
+
+    const result = await response.json();
+
+
+    if(!response.ok || !result.success){
+      throw new Error(
+        result.message || 'Blockchain transaction failed'
+      );
+    }
+
+
+    // Blockchain transaction succeeded
+    const blockchainTxHash =
+      result.transactionHash;
+
+
+    // Get latest records directly from blockchain
+    const recordsResponse =
+      await authFetch(
+        'http://localhost:5000/records'
+      );
+
+    const blockchainData =
+      await recordsResponse.json();
+
+
+    if(!blockchainData.success){
+      throw new Error(
+        'Unable to read blockchain records'
+      );
+    }
+
+
+    // Find the record we just created
+    const blockchainRecord =
+      blockchainData.records[
+        blockchainData.records.length - 1
+      ];
+
+
+    // Create UI record
+    const ts =
+      new Date(
+        Number(blockchainRecord.timestamp) * 1000
+      ).toISOString();
+
+
+    const data = {
+
+      txid:
+        blockchainTxHash,
+
+      inv:
+        SECTOR_LABELS[currentSector]
+          .slice(0,3)
+          .toUpperCase()
+          + '-' +
+        String(blockchainRecord.id)
+          .padStart(5,'0'),
+
+      name:
+        blockchainRecord.taxpayerName,
+
+      pan:
+        blockchainRecord.panNumber,
+
+      ay:
+        ay,
+
+      state:
+        blockchainRecord.state,
+
+      sector:
+        currentSector,
+
+      sectorLabel:
+        SECTOR_LABELS[currentSector],
+
+      taxCalc:
+        currentTaxCalc,
+
+      totalTax:
+        Number(blockchainRecord.taxAmount),
+
+      timestamp:
+        ts,
+
+      fy:
+        '2025-26',
+
+      blockchainTxHash:
+        blockchainTxHash,
+
+      blockchainId:
+        Number(blockchainRecord.id)
+
+    };
+
+
+    // Create a UI hash only for the existing
+    // frontend verification interface
+    const index = chain.length;
+
+    const prevHash =
+      chain.length
+        ? chain[chain.length - 1].hash
+        : '0'.repeat(64);
+
+    const payload =
+      JSON.stringify({
+        index,
+        prevHash,
+        data
+      });
+
+    let nonce = 0;
+    let hash = '';
+
+    while(!hash.startsWith('00')){
+
+      nonce++;
+
+      hash =
+        await sha256(
+          payload + nonce
+        );
+    }
+
+
+    // Add blockchain-backed record to UI
+    chain.push({
+
+      index,
+
+      prevHash,
+
+      data,
+
+      hash,
+
+      nonce,
+
+      minedAt: ts,
+
+      blockchainTxHash
+
+    });
+
+
+    save();
+
+    tampered = {};
+
+    currentTaxCalc = {};
+
+
+    // Reset progress
+    prog.style.display = 'none';
+    fill.style.width = '0%';
+    btn.disabled = false;
+
+
+    // Show transaction hash
+    alert(
+      '✅ Tax Record Stored Successfully!\n\n' +
+      'Blockchain Transaction Hash:\n\n' +
+      blockchainTxHash
+    );
+
+
+    clearForm();
+
+    // Update Dashboard, Ledger,
+    // Tax Vault and Verify
+    updateAll();
+
+    showCTab(
+      'ledger',
+      document.querySelectorAll('.ctab')[1]
+    );
+
+
+  } catch(err){
+
+    console.error(err);
+
+    alert(
+      '❌ Blockchain connection failed\n\n' +
+      err.message
+    );
+
+    prog.style.display = 'none';
+    fill.style.width = '0%';
+    btn.disabled = false;
+
+  }
+
+}
+
+function clearForm(){
+  document.querySelectorAll('.finput').forEach(i=>{if(i.type!=='number'||!['f-state'].includes(i.id))i.value='';});
+  document.getElementById('f-name').value='';
+  document.getElementById('f-pan').value='';
+  document.getElementById('preview-rows').innerHTML='<div style="font-family:var(--mono);font-size:10px;color:var(--dim);text-align:center;padding:10px">Fill the form to see live calculation</div>';
+  document.getElementById('preview-total').textContent='₹0';
+}
+
+// ===== UPDATE ALL =====
+function updateAll(){
+  updateTopbar(); updateSidebar(); updateChainStatus();
+  renderDashboard(); renderLedger(); renderVault(); renderVerify(); renderTamperList(); renderCertList();
+}
+
+function updateTopbar(){
+  let rev=0,pans=new Set();
+  chain.forEach(b=>{rev+=b.data.totalTax;pans.add(b.data.pan);});
+  document.getElementById('tb-revenue').textContent=INR(rev);
+  document.getElementById('tb-taxpayers').textContent=pans.size;
+  document.getElementById('tb-blocks').textContent=chain.length;
+}
+
+function updateSidebar(){
+  const tally={income:0,house:0,gst:0,corporate:0,capital:0,vehicle:0,customs:0,professional:0,stamp:0,agriculture:0};
+  chain.forEach(b=>{ tally[b.data.sector]=(tally[b.data.sector]||0)+b.data.totalTax; });
+  const other=(tally.professional||0)+(tally.stamp||0)+(tally.agriculture||0);
+  let total=0;Object.values(tally).forEach(v=>total+=v);
+  document.getElementById('ts-total').textContent=INR(total);
+  document.getElementById('ts-income').textContent=INR(tally.income);
+  document.getElementById('ts-gst').textContent=INR(tally.gst);
+  document.getElementById('ts-house').textContent=INR(tally.house);
+  document.getElementById('ts-corporate').textContent=INR(tally.corporate);
+  document.getElementById('ts-capital').textContent=INR(tally.capital);
+  document.getElementById('ts-other').textContent=INR(other);
+  document.getElementById('ts-blocks').textContent=chain.length;
+}
+
+function updateChainStatus(){
+  const el=document.getElementById('chain-status');
+  const t=document.getElementById('cs-text');
+  const br=Object.keys(tampered).length;
+  if(!chain.length){el.className='chain-status cs-ok';t.textContent='Chain ready — 0 blocks';}
+  else if(br){el.className='chain-status cs-err';t.textContent='BREACH: '+br+' tampered block(s) detected!';}
+  else{el.className='chain-status cs-ok';t.textContent='Integrity VALID — '+chain.length+' blocks sealed';}
+}
+
+// ===== DASHBOARD =====
+function renderDashboard(){
+  const tally={},stateMap={};let total=0;const pans=new Set();
+  chain.forEach(b=>{
+    const s=b.data.sector;
+    tally[s]=(tally[s]||0)+b.data.totalTax;
+    stateMap[b.data.state]=(stateMap[b.data.state]||0)+b.data.totalTax;
+    total+=b.data.totalTax; pans.add(b.data.pan);
+  });
+  document.getElementById('d-revenue').textContent=INR(total);
+  document.getElementById('d-taxpayers').textContent=pans.size;
+  document.getElementById('d-blocks').textContent=chain.length;
+  document.getElementById('d-compliance').textContent=Object.keys(tampered).length?'BREACH':'100%';
+
+  // Sector bars
+  const maxT=Math.max(...Object.values(tally),1);
+  const sbEl=document.getElementById('sector-bars');
+  sbEl.innerHTML=Object.keys(tally).length?Object.entries(tally).sort((a,b)=>b[1]-a[1]).map(([s,v])=>`
+    <div class="bar-row">
+      <div class="bar-lbl">${SECTOR_LABELS[s]||s}</div>
+      <div class="bar-track"><div class="bar-fill" style="width:${(v/maxT*100).toFixed(1)}%;background:${SECTOR_COLORS[s]||'var(--gold)'}"></div></div>
+      <div class="bar-amt">${INR(v)}</div>
+    </div>`).join(''):'<div class="empty">No data</div>';
+
+  // Donut
+  drawDonut(tally);
+
+  // State bars
+  const maxS=Math.max(...Object.values(stateMap),1);
+  const stEl=document.getElementById('state-bars');
+  stEl.innerHTML=Object.keys(stateMap).length?Object.entries(stateMap).sort((a,b)=>b[1]-a[1]).map(([st,v])=>`
+    <div class="bar-row">
+      <div class="bar-lbl">${st}</div>
+      <div class="bar-track"><div class="bar-fill" style="width:${(v/maxS*100).toFixed(1)}%;background:linear-gradient(90deg,var(--gold),var(--cyan))"></div></div>
+      <div class="bar-amt">${INR(v)}</div>
+    </div>`).join(''):'<div class="empty">No data</div>';
+
+  // Recent txns
+  const rEl=document.getElementById('recent-txns');
+  rEl.innerHTML=chain.length?`<table class="dtable">
+    <tr><th>Block</th><th>Inv No</th><th>Taxpayer</th><th>PAN</th><th>Sector</th><th>State</th><th>Tax Paid</th><th>Date</th></tr>
+    ${[...chain].reverse().slice(0,10).map(b=>`<tr>
+      <td style="color:var(--gold)">#${b.index}</td>
+      <td style="color:var(--muted)">${b.data.inv}</td>
+      <td style="font-weight:500">${b.data.name}</td>
+      <td style="color:var(--dim)">${b.data.pan}</td>
+      <td><span class="type-badge t-${b.data.sector}" style="font-size:8px">${b.data.sectorLabel}</span></td>
+      <td>${b.data.state}</td>
+      <td style="color:var(--gold2);font-weight:600">${INR(b.data.totalTax)}</td>
+      <td style="color:var(--dim)">${b.data.timestamp.slice(0,10)}</td>
+    </tr>`).join('')}
+  </table>`:'<div class="empty">No transactions yet</div>';
+}
+
+// DONUT CANVAS
+function drawDonut(tally){
+  const canvas=document.getElementById('donut-canvas');
+  const ctx=canvas.getContext('2d');
+  ctx.clearRect(0,0,140,140);
+  const entries=Object.entries(tally).filter(e=>e[1]>0);
+  const total=entries.reduce((s,e)=>s+e[1],0);
+  if(!total){
+    ctx.fillStyle='#1c2438';ctx.beginPath();ctx.arc(70,70,55,0,Math.PI*2);ctx.fill();
+    document.getElementById('donut-legend').innerHTML='<div style="font-family:var(--mono);font-size:9px;color:var(--dim)">No data</div>';
+    return;
+  }
+  let angle=-Math.PI/2;
+  entries.forEach(([s,v])=>{
+    const slice=v/total*Math.PI*2;
+    ctx.beginPath();ctx.moveTo(70,70);
+    ctx.arc(70,70,55,angle,angle+slice);
+    ctx.closePath();ctx.fillStyle=SECTOR_COLORS[s]||'#888';ctx.fill();
+    angle+=slice;
+  });
+  // Hole
+  ctx.beginPath();ctx.arc(70,70,30,0,Math.PI*2);ctx.fillStyle='#111520';ctx.fill();
+  // Legend
+  document.getElementById('donut-legend').innerHTML=entries.slice(0,6).map(([s,v])=>`
+    <div class="legend-row">
+      <div class="legend-dot" style="background:${SECTOR_COLORS[s]}"></div>
+      <div class="legend-lbl">${SECTOR_LABELS[s]||s}</div>
+      <div class="legend-val">${pct(v,total)}</div>
+    </div>`).join('');
+}
+
+// ===== LEDGER =====
+function renderLedger(){
+  const el=document.getElementById('ledger-blocks');
+  if(!chain.length){el.innerHTML='<div class="empty">No blocks yet.</div>';return;}
+  el.innerHTML=[...chain].reverse().map(b=>{
+    const d=b.data;const isT=tampered[b.index];const isG=b.index===0;
+    const tc=b.data.taxCalc||{};
+    return `<div class="block-item ${isT?'tampered-b':''}" onclick="toggleBlock(${b.index})">
+      <div class="block-head">
+        <div class="bh-left">
+          <span class="block-num">BLOCK #${b.index}</span>
+          <span class="type-badge t-${d.sector}">${d.sectorLabel}</span>
+          <span class="status-badge ${isG?'sb-genesis':isT?'sb-tamper':'sb-valid'}">${isG?'GENESIS':isT?'TAMPERED':'VALID'}</span>
+        </div>
+        <div class="bh-right">
+          <span class="hash-chip">${b.hash}</span>
+          <span class="bts">${d.timestamp.slice(0,10)}</span>
+          <span style="font-family:var(--mono);font-size:11px;color:var(--gold2);font-weight:600">${INR(d.totalTax)}</span>
+        </div>
+      </div>
+      <div class="block-detail ${openBlocks[b.index]?'open':''}" id="bd-${b.index}">
+        <div class="bd-grid">
+          <div class="bd-cell"><div class="bd-lbl">Inv / Ref</div><div class="bd-val">${d.inv}</div></div>
+          <div class="bd-cell"><div class="bd-lbl">TX ID</div><div class="bd-val" style="font-size:8px">${d.txid}</div></div>
+          <div class="bd-cell"><div class="bd-lbl">Taxpayer</div><div class="bd-val">${d.name}</div></div>
+          <div class="bd-cell"><div class="bd-lbl">PAN / TAN</div><div class="bd-val">${d.pan}</div></div>
+          <div class="bd-cell"><div class="bd-lbl">Assess. Year</div><div class="bd-val">${d.ay}</div></div>
+          <div class="bd-cell"><div class="bd-lbl">State</div><div class="bd-val">${d.state}</div></div>
+          <div class="bd-cell"><div class="bd-lbl">Sector</div><div class="bd-val">${d.sectorLabel}</div></div>
+          <div class="bd-cell"><div class="bd-lbl">Tax Paid</div><div class="bd-val gold">${INR(d.totalTax)}</div></div>
+          <div class="bd-cell"><div class="bd-lbl">Nonce (PoW)</div><div class="bd-val cyan">${b.nonce}</div></div>
+          ${Object.entries(tc).filter(([k])=>!['type'].includes(k)).slice(0,3).map(([k,v])=>`
+          <div class="bd-cell"><div class="bd-lbl">${k}</div><div class="bd-val">${typeof v==='number'?INR(v):v}</div></div>`).join('')}
+        </div>
+        <div class="hash-display">
+          <span>BLOCK HASH :</span> ${b.hash}<br>
+          <span>PREV HASH :</span> ${b.prevHash}<br>
+
+          <span>BLOCKCHAIN TX :</span>
+          ${
+          d.blockchainTxHash
+          ? `<span style="word-break:break-all;">
+          ${d.blockchainTxHash}
+          </span>`
+          : `<span>Transaction hash unavailable</span>`
+          }
+
+          <br><br>
+
+          <button
+          class="btn"
+          style="margin-top:10px;"
+          onclick="event.stopPropagation(); verifyBlockchainRecord(${d.blockchainId})"
+          >
+          🔍 VERIFY ON BLOCKCHAIN
+          </button>
+
+          <div
+          id="verify-result-${d.blockchainId}"
+          style="margin-top:10px;"
+          ></div>
+        </div>
+      </div>
+    </div>
+    ${b.index>0?'<div class="chain-conn">| |</div>':''}`;
+  }).join('');
+}
+
+function toggleBlock(i){openBlocks[i]=!openBlocks[i];const el=document.getElementById('bd-'+i);if(el)el.classList.toggle('open',openBlocks[i]);}
+
+async function verifyBlockchainRecord(recordId){
+
+  const resultEl =
+    document.getElementById(
+      'verify-result-' + recordId
+    );
+
+  if(!resultEl){
+    return;
+  }
+
+  resultEl.innerHTML =
+    '<span style="color:#f5c451;">⏳ Verifying blockchain record...</span>';
+
+  try{
+
+    const response = await authFetch(
+      BACKEND_URL + '/verify/' + recordId
+    );
+
+    const result = await response.json();
+
+    if(
+      result.success &&
+      result.verified
+    ){
+
+      resultEl.innerHTML = `
+        <div style="
+          padding:12px;
+          border:1px solid #28c76f;
+          border-radius:8px;
+          color:#28c76f;
+          font-weight:600;
+        ">
+          ✅ BLOCKCHAIN VERIFIED
+          <br>
+          Record ID: ${result.record.id}
+          <br>
+          Taxpayer: ${result.record.taxpayerName}
+          <br>
+          Tax Amount:
+          ${INR(result.record.taxAmount)}
+        </div>
+      `;
+
+    }else{
+
+      resultEl.innerHTML = `
+        <div style="
+          padding:12px;
+          border:1px solid #ff4d4d;
+          border-radius:8px;
+          color:#ff4d4d;
+        ">
+          ❌ BLOCKCHAIN VERIFICATION FAILED
+          <br>
+          ${result.message || 'Record not found'}
+        </div>
+      `;
+
+    }
+
+  }catch(error){
+
+    console.error(
+      'Verification failed:',
+      error
+    );
+
+    resultEl.innerHTML = `
+      <div style="
+        padding:12px;
+        border:1px solid #ff4d4d;
+        border-radius:8px;
+        color:#ff4d4d;
+      ">
+        ❌ Backend connection failed
+      </div>
+    `;
+
+  }
+
+}
+
+// ===== VAULT =====
+function renderVault(){
+  const tally={income:0,house:0,gst:0,corporate:0,capital:0,vehicle:0,customs:0,professional:0,stamp:0,agriculture:0};
+  const stateMap={};const panMap={};
+  chain.forEach(b=>{
+    tally[b.data.sector]=(tally[b.data.sector]||0)+b.data.totalTax;
+    stateMap[b.data.state]=(stateMap[b.data.state]||0)+b.data.totalTax;
+    if(!panMap[b.data.pan]) panMap[b.data.pan]={name:b.data.name,total:0,sectors:new Set()};
+    panMap[b.data.pan].total+=b.data.totalTax;
+    panMap[b.data.pan].sectors.add(b.data.sectorLabel);
+  });
+  ['income','house','gst','corporate','capital','vehicle','customs'].forEach(s=>{
+    const elId = s==='corporate'?'v-corp':s==='customs'?'v-cust':s==='vehicle'?'v-veh':s==='capital'?'v-cap':'v-'+s;
+    const el = document.getElementById(elId);
+    if(el) el.textContent=INR(tally[s]);
+  });
+  document.getElementById('v-other').textContent=INR((tally.professional||0)+(tally.stamp||0)+(tally.agriculture||0));
+
+  const maxS=Math.max(...Object.values(stateMap),1);
+  document.getElementById('vault-state').innerHTML=Object.keys(stateMap).length?
+    Object.entries(stateMap).sort((a,b)=>b[1]-a[1]).map(([st,v])=>`
+    <div class="bar-row">
+      <div class="bar-lbl">${st.split(' ')[0]}</div>
+      <div class="bar-track"><div class="bar-fill" style="width:${(v/maxS*100).toFixed(1)}%;background:var(--purple)"></div></div>
+      <div class="bar-amt">${INR(v)}</div>
+    </div>`).join(''):'<div class="empty" style="padding:20px">No data</div>';
+
+  document.getElementById('vault-leader').innerHTML=Object.keys(panMap).length?`<table class="dtable">
+    <tr><th>Taxpayer</th><th>PAN</th><th>Sectors</th><th>Total Tax</th></tr>
+    ${Object.entries(panMap).sort((a,b)=>b[1].total-a[1].total).slice(0,10).map(([pan,v])=>`<tr>
+      <td style="font-weight:500">${v.name}</td>
+      <td style="color:var(--dim)">${pan}</td>
+      <td style="color:var(--muted)">${[...v.sectors].join(', ')}</td>
+      <td style="color:var(--gold2);font-weight:600">${INR(v.total)}</td>
+    </tr>`).join('')}
+  </table>`:'<div class="empty" style="padding:20px">No data</div>';
+
+  document.getElementById('vault-registry').innerHTML=chain.length?`<table class="dtable">
+    <tr><th>#</th><th>Inv</th><th>Taxpayer</th><th>PAN</th><th>Sector</th><th>State</th><th>AY</th><th>Tax Paid</th><th>Date</th></tr>
+    ${chain.map(b=>`<tr>
+      <td style="color:var(--gold)">${b.index}</td>
+      <td style="color:var(--dim)">${b.data.inv}</td>
+      <td>${b.data.name}</td>
+      <td style="color:var(--dim)">${b.data.pan}</td>
+      <td><span class="type-badge t-${b.data.sector}">${b.data.sectorLabel}</span></td>
+      <td>${b.data.state}</td>
+      <td>${b.data.ay}</td>
+      <td style="color:var(--gold2);font-weight:600">${INR(b.data.totalTax)}</td>
+      <td style="color:var(--dim)">${b.data.timestamp.slice(0,10)}</td>
+    </tr>`).join('')}
+  </table>`:'<div class="empty">No data</div>';
+}
+
+// ===== VERIFY =====
+async function renderVerify(){
+  const el=document.getElementById('verify-result');
+  const ex=document.getElementById('verify-extra');
+  if(!chain.length){el.innerHTML='<div class="empty">No blocks to verify.</div>';ex.style.display='none';return;}
+  ex.style.display='block';
+  let valid=true,brokenAt=-1;
+  for(let i=0;i<chain.length;i++){
+    if(tampered[i]){valid=false;brokenAt=i;break;}
+    if(i>0&&chain[i].prevHash!==chain[i-1].hash){valid=false;brokenAt=i;break;}
+    const payload=JSON.stringify({index:chain[i].index,prevHash:chain[i].prevHash,data:chain[i].data});
+    const h=await sha256(payload+chain[i].nonce);
+    if(h!==chain[i].hash){valid=false;brokenAt=i;break;}
+  }
+  if(valid){
+    el.innerHTML=`<div class="verify-box vok">✓ CHAIN INTEGRITY VERIFIED — All ${chain.length} blocks are cryptographically sealed and intact.<br>Every SHA-256 hash links correctly. No tampering has been detected. The tax ledger is immutable.</div>`;
+  } else {
+    el.innerHTML=`<div class="verify-box verr">⚠ BREACH DETECTED AT BLOCK #${brokenAt} — SHA-256 hash mismatch found. The block data has been tampered with.<br>All downstream blocks are cryptographically invalidated. In a live system, this would trigger regulatory alerts and block rejection by the network consensus.</div>`;
+  }
+  updateChainStatus();
+}
+
+function renderTamperList(){
+  const el=document.getElementById('tamper-list');
+  if(!chain.length){el.innerHTML='';return;}
+  el.innerHTML=chain.map(b=>`
+    <div class="tamper-row-v">
+      <span>Block #${b.index} — <strong>${b.data.name}</strong> — ${b.data.sectorLabel} — ${INR(b.data.totalTax)}</span>
+      <button class="btn-tamper" onclick="tamperBlock(${b.index})" ${tampered[b.index]?'disabled style="opacity:.3"':''}>
+        ${tampered[b.index]?'TAMPERED':'TAMPER'}
+      </button>
+    </div>`).join('');
+}
+
+function tamperBlock(i){tampered[i]=true;renderVerify();renderTamperList();renderLedger();updateChainStatus();}
+function resetTamper(){tampered={};renderVerify();renderTamperList();renderLedger();updateChainStatus();}
+
+// ===== CERTIFICATES =====
+function renderCertList(){
+  const el=document.getElementById('cert-block');
+  el.innerHTML=chain.length?
+    chain.map(b=>`<option value="${b.index}">Block #${b.index} — ${b.data.name} (${b.data.sectorLabel})</option>`).join('')
+    :'<option>No blocks</option>';
+}
+
+function generateCert(){
+  const idx=+document.getElementById('cert-block').value;
+  const type=document.getElementById('cert-type').value;
+  const b=chain[idx];if(!b){alert('Invalid block');return;}
+  const d=b.data;const tc=d.taxCalc||{};
+  const dt=new Date(d.timestamp).toLocaleString('en-IN');
+  const line='═'.repeat(60);
+
+  let body='';
+  if(type==='form16'){
+    body=`  FORM 16 — CERTIFICATE OF TAX DEDUCTED AT SOURCE
+  (Under Section 203 of the Income Tax Act, 1961)
+${line}
+  Name of Employee     : ${d.name}
+  PAN of Employee      : ${d.pan}
+  Assessment Year      : ${d.ay}
+  Financial Year       : FY 2025-26
+  State                : ${d.state}
+${line}
+  PART A — TDS DETAILS
+  Total TDS Deducted   : ${INR(d.totalTax)}
+  Tax Regime           : ${(tc.regime||'N/A').toUpperCase()}
+  Gross Salary         : ${INR(tc.gross||0)}
+  Taxable Income       : ${INR(tc.taxable||0)}
+  Effective Tax Rate   : ${tc.effectiveRate||'N/A'}
+${line}
+  PART B — INCOME DETAILS
+  Income Tax           : ${INR(tc.tax||0)}
+  Surcharge            : ${INR(tc.surcharge||0)}
+  Health & Edu Cess    : ${INR(tc.cess||0)}
+  Total Tax (TDS)      : ${INR(tc.tds||d.totalTax)}
+${line}`;
+  } else if(type==='clearance'){
+    body=`  TAX CLEARANCE CERTIFICATE
+  (Issued under the Income Tax Act, 1961)
+${line}
+  This is to certify that ${d.name} (PAN: ${d.pan})
+  has paid all due taxes for AY ${d.ay} as follows:
+  
+  Sector               : ${d.sectorLabel}
+  Total Tax Paid       : ${INR(d.totalTax)}
+  State                : ${d.state}
+  Block Reference      : #${b.index}
+  Transaction ID       : ${d.txid}
+  Chain Hash           : ${b.hash.slice(0,32)}...
+  
+  Status               : CLEARED — NO DUES OUTSTANDING
+${line}`;
+  } else if(type==='gst'){
+    body=`  GST COMPLIANCE CERTIFICATE
+  (Goods & Services Tax Act, 2017)
+${line}
+  GSTIN                : ${tc.gstin||d.pan}
+  Taxpayer             : ${d.name}
+  Assessment Year      : ${d.ay}
+  State                : ${d.state}
+${line}
+  GST Rate Applied     : ${tc.gstRate||0}%
+  Transaction Type     : ${tc.txtype||'N/A'}
+  Invoice Value        : ${INR(tc.amount||0)}
+  CGST                 : ${INR(tc.cgst||0)}
+  SGST                 : ${INR(tc.sgst||0)}
+  IGST                 : ${INR(tc.igst||0)}
+  Total GST Paid       : ${INR(d.totalTax)}
+  
+  ITC Status           : ELIGIBLE
+  Compliance Status    : COMPLIANT
+${line}`;
+  } else if(type==='property'){
+    body=`  HOUSE / PROPERTY TAX RECEIPT
+  (Municipal Corporation / State Government)
+${line}
+  Property Owner       : ${d.name}
+  PAN                  : ${d.pan}
+  State                : ${d.state}
+  Assessment Year      : ${d.ay}
+${line}
+  Property Type        : ${tc.propType||'N/A'}
+  Property Value       : ${INR(tc.propertyValue||0)}
+  Annual Value (GAV)   : ${INR(tc.annualValue||0)}
+  Zone                 : ${tc.zone||'N/A'}
+  Municipal Tax        : ${INR(tc.munTaxAnnual||0)}
+  State Property Tax   : ${INR(tc.propTax||0)}
+  Total Tax Paid       : ${INR(d.totalTax)}
+  
+  Receipt Status       : PAID
+${line}`;
+  } else {
+    body=`  INCOME TAX RETURN ACKNOWLEDGEMENT
+  (ITR Filing Confirmation)
+${line}
+  Taxpayer             : ${d.name}
+  PAN                  : ${d.pan}
+  Assessment Year      : ${d.ay}
+  Filing Date          : ${dt}
+  Total Tax Paid       : ${INR(d.totalTax)}
+  Sector               : ${d.sectorLabel}
+  e-Filing Status      : SUCCESSFULLY FILED
+  Acknowledgement No   : ACK${d.txid.slice(0,12)}
+${line}`;
+  }
+
+  const cert=`
+╔${line}╗
+║${' '.repeat(20)}GOVTAXCHAIN INDIA${' '.repeat(23)}║
+║${' '.repeat(15)}National Blockchain Tax System${' '.repeat(15)}║
+╠${line}╣
+${body}
+  Blockchain Block #   : ${b.index}
+  Transaction ID       : ${d.txid}
+  Block Hash           : ${b.hash.slice(0,40)}...
+  Previous Hash        : ${b.prevHash.slice(0,40)}...
+  Timestamp            : ${dt}
+  Nonce (PoW)          : ${b.nonce}
+╠${line}╣
+║  VERIFIED ON IMMUTABLE BLOCKCHAIN — TAMPER-PROOF RECORD  ║
+║  This certificate is cryptographically secured.          ║
+║  Any modification will invalidate the SHA-256 hash.      ║
+╚${line}╝`;
+
+  document.getElementById('cert-preview').textContent=cert;
+  lastCertText=cert;
+}
+
+function downloadCert(){
+  if(!lastCertText){alert('Generate a certificate first.');return;}
+  const b=new Blob([lastCertText],{type:'text/plain'});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(b);
+  a.download='GovTaxChain_Certificate.txt';
+  a.click();
+}
+
+// ===== AI AUDIT =====
+async function runAudit(){
+  const q=document.getElementById('ai-input').value.trim();
+  if(!q){alert('Enter a query.');return;}
+  await doAudit(q);
+}
+function qa(q){document.getElementById('ai-input').value=q;showCTab('audit',null);doAudit(q);}
+
+async function doAudit(query){
+  const out=document.getElementById('ai-output');
+  out.innerHTML='<span class="ai-placeholder" style="animation:pulse 1s infinite">⟳ Running AI audit across blockchain ledger...</span>';
+
+  const tally={};let total=0;const pans={};
+  chain.forEach(b=>{
+    tally[b.data.sector]=(tally[b.data.sector]||0)+b.data.totalTax;
+    total+=b.data.totalTax;
+    if(!pans[b.data.pan]) pans[b.data.pan]={name:b.data.name,total:0};
+    pans[b.data.pan].total+=b.data.totalTax;
+  });
+
+  const ledgerSummary = chain.map(b=>{
+    const d=b.data;const tc=d.taxCalc||{};
+    return `Block#${b.index}|${d.inv}|${d.name}(${d.pan})|Sector:${d.sectorLabel}|AY:${d.ay}|State:${d.state}|Tax:₹${d.totalTax}|Details:${JSON.stringify(tc).slice(0,200)}`;
+  }).join('\n') || 'No transactions yet.';
+
+  const prompt=`You are GovTaxChain AI Auditor — an expert Indian government tax compliance system.
+
+BLOCKCHAIN LEDGER:
+${ledgerSummary}
+
+SECTOR TOTALS:
+${Object.entries(tally).map(([s,v])=>`${SECTOR_LABELS[s]}: ₹${N(v)}`).join(' | ')}
+
+TOTAL REVENUE: ₹${N(total)}
+CHAIN STATUS: ${Object.keys(tampered).length?'TAMPERED — BREACH DETECTED':'VALID — Immutable'}
+TOTAL TAXPAYERS: ${Object.keys(pans).length}
+BLOCKS: ${chain.length}
+
+USER QUERY: ${query}
+
+Respond as an official government AI tax auditor. Be precise, reference specific PAN numbers, block numbers, and tax amounts. Use proper Indian tax terminology (TDS, HRA, 80C, CGST, SGST, etc.). Flag anomalies clearly. Format with clear sections. Keep under 400 words.`;
+
+  try{
+    const res=await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1000,messages:[{role:'user',content:prompt}]})
+    });
+    const data=await res.json();
+    const text=(data.content||[]).map(c=>c.text||'').join('\n').trim()||'No response.';
+    out.textContent=text;
+  }catch(e){
+    out.innerHTML='<span style="color:var(--red)">AI audit error — check network.</span>';
+  }
+}
+
+// ===== CSV =====
+function exportCSV(){
+  if(!chain.length){alert('No data.');return;}
+  const hdr=['Block','InvNo','TxID','Taxpayer','PAN','AY','FY','Sector','State','TotalTax','Date','Hash'];
+  const rows=chain.map(b=>[b.index,b.data.inv,b.data.txid,b.data.name,b.data.pan,b.data.ay,b.data.fy,b.data.sectorLabel,b.data.state,b.data.totalTax,b.data.timestamp.slice(0,10),b.hash].join(','));
+  const blob=new Blob([[hdr.join(','),...rows].join('\n')],{type:'text/csv'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='govtaxchain_ledger.csv';a.click();
+}
+
+// ===== ROLES ADMIN PANEL =====
+
+async function fetchAccountsAndRoles(){
+  const accRes = await authFetch(BACKEND_URL + '/accounts');
+  const accData = await accRes.json();
+  if(!accData.success) throw new Error(accData.message || 'Failed to load accounts');
+  demoAccounts = accData.accounts;
+
+  const roleRes = await authFetch(BACKEND_URL + '/roles');
+  const roleData = await roleRes.json();
+  if(!roleData.success) throw new Error(roleData.message || 'Failed to load roles');
+  return roleData.roles;
+}
+
+async function renderRoles(){
+  const list = document.getElementById('roles-list');
+  const select = document.getElementById('role-target-select');
+
+  try{
+    const roles = await fetchAccountsAndRoles();
+
+    list.innerHTML = Object.entries(roles).map(([label, info]) => `
+      <div class="role-row">
+        <div>
+          <div style="text-transform:capitalize">${label}</div>
+          <div style="color:var(--dim);font-size:9px">${info.address}</div>
+        </div>
+        <span class="role-tag ${info.role}">${info.role}</span>
+      </div>
+    `).join('');
+
+    select.innerHTML = Object.entries(roles).map(([label, info]) =>
+      `<option value="${info.address}">${label} — ${info.address.slice(0,10)}…</option>`
+    ).join('');
+
+  }catch(e){
+    list.innerHTML = `<div class="empty" style="color:var(--red)">Could not load roles — is the backend running?<br>${e.message}</div>`;
+  }
+}
+
+async function submitRoleChange(){
+  const address = document.getElementById('role-target-select').value;
+  const action = document.getElementById('role-action-select').value;
+  const msg = document.getElementById('roles-msg');
+
+  if(!address){
+    msg.innerHTML = '<span style="color:var(--red)">No account selected.</span>';
+    return;
+  }
+
+  const endpoint = action === 'officer' ? '/assign-tax-officer'
+    : action === 'auditor' ? '/assign-auditor'
+    : '/remove-role';
+
+  msg.innerHTML = 'Submitting transaction…';
+
+  try{
+    const res = await authFetch(BACKEND_URL + endpoint, {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({ address })
+    });
+    const data = await res.json();
+
+    if(!data.success){
+      throw new Error(data.message || 'Transaction failed');
+    }
+
+    msg.innerHTML = `<span style="color:var(--teal)">✓ ${data.message}</span><br><span style="color:var(--dim)">tx: ${data.transactionHash}</span>`;
+    renderRoles();
+
+  }catch(e){
+    msg.innerHTML = `<span style="color:var(--red)">✗ ${e.message}</span>`;
+  }
+}
+
+// ===== NAV / TABS =====
+function setNav(btn,page){
+  document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  showCTab(page,null);
+}
+
+function showCTab(name,btn){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.ctab').forEach(b=>b.classList.remove('active'));
+  document.getElementById('page-'+name).classList.add('active');
+  if(btn) btn.classList.add('active');
+  else{
+    const tabs=['dashboard','ledger','vault','verify','audit','certs','summary','roles'];
+    document.querySelectorAll('.ctab')[tabs.indexOf(name)]?.classList.add('active');
+  }
+  if(name==='verify') renderVerify();
+  if(name==='vault') renderVault();
+  if(name==='ledger') renderLedger();
+  if(name==='dashboard') renderDashboard();
+  if(name==='certs') renderCertList();
+  if(name==='roles') renderRoles();
+  if(name==='summary') initSummaryPage();
+}
+
+// ===== INIT =====
+// Set current FY label
+const now=new Date();
+const fyYear=now.getMonth()>=3?now.getFullYear():now.getFullYear()-1;
+document.getElementById('fy-label').textContent=`FY ${fyYear}–${(fyYear+1).toString().slice(2)}`;
+
+// Restore saved login session, if any (validity is re-checked the
+// next time a protected action is used — an expired/invalid token
+// will trigger an automatic logout via authFetch()).
+try{
+  const savedRole = localStorage.getItem('gtc_role');
+  const savedToken = localStorage.getItem('gtc_token');
+  if(savedRole && savedToken){
+    currentRole = savedRole;
+    authToken = savedToken;
+    document.getElementById('login-overlay').style.display = 'none';
+    applyRoleUI();
+  }
+}catch(e){}
+
+
+// ==================== TAX SUMMARY (multi-source income) ====================
+// All amounts from the backend for this feature are in PAISE.
+
+const smEsc = v => String(v ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const smMoney = p => (p < 0 ? '−' : '') + INR(Math.abs(p) / 100);
+
+function smMsg(id, text, ok){
+  const el = document.getElementById(id);
+  el.style.color = ok ? 'var(--green, #00b894)' : 'var(--red)';
+  el.textContent = text;
+}
+
+async function smPost(path, body){
+  const res = await authFetch(BACKEND_URL + path, {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify(body)
+  });
+  return res.json();
+}
+
+async function initSummaryPage(){
+  try{
+    const res = await authFetch(BACKEND_URL + '/dashboard');
+    const d = await res.json();
+    if(!d.success || !d.ledger) return;
+    const L = d.ledger;
+    document.getElementById('ls-income').textContent = L.incomeEntries;
+    document.getElementById('ls-gross').textContent = smMoney(L.grossIncomePaise);
+    document.getElementById('ls-tds').textContent = smMoney(L.tdsPaise);
+    document.getElementById('ls-adv').textContent = smMoney(L.advanceTaxPaise);
+    document.getElementById('ls-gst').textContent = smMoney(L.gstPaise);
+  }catch(e){ /* stats are optional; login redirect is handled by authFetch */ }
+}
+
+async function submitIncomeEntry(){
+  smMsg('ie-msg', 'Sending to blockchain…', true);
+  try{
+    const data = await smPost('/income-entry', {
+      pan: document.getElementById('ie-pan').value,
+      financialYear: document.getElementById('ie-fy').value,
+      incomeType: document.getElementById('ie-type').value,
+      grossAmount: document.getElementById('ie-amt').value,
+      payerName: document.getElementById('ie-payer').value,
+      payerTAN: document.getElementById('ie-tan').value
+    });
+    if(!data.success) return smMsg('ie-msg', data.message || 'Failed', false);
+    smMsg('ie-msg', `✓ Income entry #${data.incomeEntryId} filed · tx ${data.transactionHash.slice(0,18)}…  (use #${data.incomeEntryId} as the related ID for its TDS)`, true);
+    document.getElementById('tp-pan').value = document.getElementById('ie-pan').value;
+    document.getElementById('tp-fy').value = document.getElementById('ie-fy').value;
+    document.getElementById('tp-rel').value = data.incomeEntryId;
+    initSummaryPage();
+  }catch(e){ smMsg('ie-msg', e.message, false); }
+}
+
+async function submitTaxPayment(){
+  smMsg('tp-msg', 'Sending to blockchain…', true);
+  try{
+    const data = await smPost('/tax-payment', {
+      pan: document.getElementById('tp-pan').value,
+      financialYear: document.getElementById('tp-fy').value,
+      taxType: document.getElementById('tp-type').value,
+      amount: document.getElementById('tp-amt').value,
+      relatedIncomeId: document.getElementById('tp-rel').value || 0
+    });
+    if(!data.success) return smMsg('tp-msg', data.message || 'Failed', false);
+    smMsg('tp-msg', `✓ Tax payment #${data.taxPaymentId} filed · tx ${data.transactionHash.slice(0,18)}…`, true);
+    initSummaryPage();
+  }catch(e){ smMsg('tp-msg', e.message, false); }
+}
+
+async function submitVoid(){
+  const kind = document.getElementById('vd-kind').value;
+  const id = document.getElementById('vd-id').value;
+  const reason = document.getElementById('vd-reason').value;
+  if(!id) return smMsg('vd-msg', 'Enter the entry ID.', false);
+  smMsg('vd-msg', 'Sending to blockchain…', true);
+  try{
+    const data = await smPost(`/${kind}/${encodeURIComponent(id)}/void`, { reason });
+    if(!data.success) return smMsg('vd-msg', data.message || 'Failed', false);
+    smMsg('vd-msg', '✓ ' + data.message, true);
+    initSummaryPage();
+  }catch(e){ smMsg('vd-msg', e.message, false); }
+}
+
+async function loadSummary(){
+  const pan = document.getElementById('sm-pan').value.trim().toUpperCase();
+  const fy = document.getElementById('sm-fy').value;
+  const ded = document.getElementById('sm-ded').value;
+  const out = document.getElementById('sm-result');
+  out.innerHTML = '';
+  if(!pan) return smMsg('sm-msg', 'Enter a PAN.', false);
+  smMsg('sm-msg', 'Reading from blockchain…', true);
+  try{
+    const url = `${BACKEND_URL}/summary/${encodeURIComponent(pan)}/${encodeURIComponent(fy)}` + (ded ? `?deductions=${encodeURIComponent(ded)}` : '');
+    const res = await authFetch(url);
+    const data = await res.json();
+    if(!data.success) return smMsg('sm-msg', data.message || 'Failed', false);
+    smMsg('sm-msg', '', true);
+    out.innerHTML = renderSummaryHTML(data);
+  }catch(e){ smMsg('sm-msg', e.message, false); }
+}
+
+function renderSummaryHTML(data){
+  const S = data.summary;
+
+  const entryRows = data.incomeEntries.length ? data.incomeEntries.map(e => `
+    <tr style="${e.voided ? 'opacity:.5;text-decoration:line-through' : ''}">
+      <td>#${e.id}</td><td>${smEsc(e.incomeType)}</td><td>${smEsc(e.payerName)}</td>
+      <td style="text-align:right">${smMoney(e.grossPaise)}</td>
+      <td>${e.voided ? 'VOID — ' + smEsc(e.voidReason) + (e.supersededBy ? ' → #' + e.supersededBy : '') : 'Active'}</td>
+    </tr>`).join('') : '<tr><td colspan="5" class="empty">No income entries</td></tr>';
+
+  const payRows = data.taxPayments.length ? data.taxPayments.map(p => `
+    <tr style="${p.voided ? 'opacity:.5;text-decoration:line-through' : ''}">
+      <td>#${p.id}</td><td>${smEsc(p.taxType)}</td>
+      <td>${p.relatedIncomeId ? '#' + p.relatedIncomeId : '—'}</td>
+      <td style="text-align:right">${smMoney(p.amountPaise)}</td>
+      <td>${p.voided ? 'VOID — ' + smEsc(p.voidReason) : (p.taxType === 'GST' ? 'Separate (not credited)' : 'Credited')}</td>
+    </tr>`).join('') : '<tr><td colspan="5" class="empty">No tax payments</td></tr>';
+
+  const row = (label, val, strong) =>
+    `<tr><td style="color:var(--muted)">${label}</td><td style="text-align:right;${strong ? 'font-weight:700;color:var(--white)' : ''}">${val}</td></tr>`;
+
+  const regimeCard = (key, r) => {
+    const rec = S.recommendedRegime === key;
+    const color = r.status === 'REFUND' ? 'var(--green, #00b894)' : r.status === 'PAYABLE' ? 'var(--red)' : 'var(--muted)';
+    return `
+    <div class="gcard" style="margin:0;${rec ? 'border-color:var(--gold)' : ''}">
+      <div class="gcard-head"><div class="gcard-title">${smEsc(r.label)}${rec ? ' · lower tax' : ''}</div></div>
+      <div class="gcard-body" style="padding:6px 12px 14px">
+        <table class="dtable"><tbody>
+          ${row('Gross income', smMoney(r.grossIncomePaise))}
+          ${row('− Standard deduction', smMoney(r.standardDeductionPaise))}
+          ${row('− Chapter VI-A deductions', smMoney(r.otherDeductionsPaise))}
+          ${row('Taxable income', smMoney(r.taxableIncomePaise), true)}
+          ${row('Slab tax', smMoney(r.slabTaxPaise))}
+          ${row('− Rebate (87A / marginal relief)', smMoney(r.rebatePaise + r.marginalReliefPaise))}
+          ${row('+ Health &amp; education cess', smMoney(r.cessPaise))}
+          ${row('Total tax liability', smMoney(r.totalTaxPaise), true)}
+          ${row('− TDS credit', smMoney(r.tdsCreditPaise))}
+          ${row('− Advance tax credit', smMoney(r.advanceTaxPaise))}
+          <tr><td style="font-weight:700;color:${color}">${r.status === 'REFUND' ? 'Refund due' : r.status === 'PAYABLE' ? 'Balance payable' : 'Nil'}</td>
+              <td style="text-align:right;font-weight:700;color:${color}">${smMoney(Math.abs(r.balancePaise))}</td></tr>
+        </tbody></table>
+      </div>
+    </div>`;
+  };
+
+  const byType = Object.entries(S.incomeByTypePaise).filter(([, v]) => v > 0)
+    .map(([k, v]) => `${smEsc(k)}: <b>${smMoney(v)}</b>`).join(' &nbsp;·&nbsp; ') || 'none';
+
+  const warnings = S.warnings.length
+    ? `<div style="border:1px solid var(--gold);border-radius:8px;padding:10px 14px;margin-bottom:14px;font-family:var(--mono);font-size:10px;line-height:1.8;color:var(--gold)">⚠ ${S.warnings.map(smEsc).join('<br>⚠ ')}</div>` : '';
+
+  return `
+    <div style="font-family:var(--mono);font-size:11px;margin-bottom:12px;line-height:1.9">
+      PAN ${smEsc(data.pan)} · FY ${smEsc(S.financialYear)}<br>
+      Income by source — ${byType}<br>
+      Total gross income <b>${smMoney(S.grossIncomePaise)}</b>
+    </div>
+    ${warnings}
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px">
+      ${Object.entries(S.regimes).map(([k, r]) => regimeCard(k, r)).join('')}
+    </div>
+    <div style="border:1px dashed var(--border2);border-radius:8px;padding:12px 14px;margin-bottom:16px;font-family:var(--mono);font-size:10px;line-height:1.8">
+      <b style="color:var(--white)">GST paid: ${smMoney(S.gstPaidPaise)}</b> — ${smEsc(S.gstNote)}
+    </div>
+    <div class="flabel" style="margin-bottom:6px">Income entries</div>
+    <table class="dtable" style="margin-bottom:16px"><thead><tr><th>ID</th><th>Type</th><th>Payer</th><th style="text-align:right">Gross</th><th>Status</th></tr></thead><tbody>${entryRows}</tbody></table>
+    <div class="flabel" style="margin-bottom:6px">Tax payments</div>
+    <table class="dtable" style="margin-bottom:16px"><thead><tr><th>ID</th><th>Type</th><th>Income</th><th style="text-align:right">Amount</th><th>Status</th></tr></thead><tbody>${payRows}</tbody></table>
+    <div style="font-family:var(--mono);font-size:9px;color:var(--dim);line-height:1.8">${smEsc(data.disclaimer)}</div>`;
+}
+
+updateEmploymentUI();
+load();
+</script>
+</body>
+</html>

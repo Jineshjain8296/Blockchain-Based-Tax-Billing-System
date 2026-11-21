@@ -1,0 +1,38 @@
+{
+  "_note": "Amounts are in RUPEES here. Slabs/rebates change by Budget and by law - verify with a CA / the Income-tax department before relying on them. Add a new financial year by copying a block, or use {\"sameAs\": \"2025-26\"} when nothing changed.",
+  "cessPercent": 4,
+  "financialYears": {
+    "2025-26": {
+      "regimes": {
+        "new": {
+          "label": "New regime (default)",
+          "standardDeductionSalary": 75000,
+          "allowChapterVIA": false,
+          "slabs": [
+            { "upto": 400000,  "rate": 0 },
+            { "upto": 800000,  "rate": 5 },
+            { "upto": 1200000, "rate": 10 },
+            { "upto": 1600000, "rate": 15 },
+            { "upto": 2000000, "rate": 20 },
+            { "upto": 2400000, "rate": 25 },
+            { "upto": null,    "rate": 30 }
+          ],
+          "rebate": { "incomeLimit": 1200000, "maxRebate": 60000, "marginalRelief": true }
+        },
+        "old": {
+          "label": "Old regime",
+          "standardDeductionSalary": 50000,
+          "allowChapterVIA": true,
+          "slabs": [
+            { "upto": 250000, "rate": 0 },
+            { "upto": 500000, "rate": 5 },
+            { "upto": 1000000, "rate": 20 },
+            { "upto": null,   "rate": 30 }
+          ],
+          "rebate": { "incomeLimit": 500000, "maxRebate": 12500, "marginalRelief": false }
+        }
+      }
+    },
+    "2026-27": { "sameAs": "2025-26" }
+  }
+}

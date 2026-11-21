@@ -1,0 +1,21 @@
+{
+  "name": "blockchain",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "devDependencies": {
+    "@types/node": "^22.19.21",
+    "hardhat": "^3.9.0",
+    "typescript": "~6.0.3"
+  },
+  "type": "module",
+  "dependencies": {
+    "ethers": "^6.16.0"
+  }
+}
